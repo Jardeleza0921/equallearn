@@ -1,0 +1,478 @@
+/* =========================================
+   EQUALLEARN V2
+   MANAGE TEACHERS
+   ========================================= */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: #f4f3ff;
+    color: #333;
+    min-height: 100vh;
+}
+
+
+/* =========================================
+   MAIN CONTAINER
+   ========================================= */
+
+.container {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 35px 25px;
+}
+
+
+/* =========================================
+   TITLE
+   ========================================= */
+
+.container > h1 {
+    color: #6c63ff;
+    font-size: 30px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+
+/* =========================================
+   ADD TEACHER BUTTON
+   ========================================= */
+
+#openModal {
+    border: none;
+    background: #6c63ff;
+    color: white;
+
+    padding: 12px 20px;
+
+    border-radius: 12px;
+
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+
+    margin-bottom: 25px;
+}
+
+#openModal:hover {
+    background: #554cff;
+    transform: translateY(-1px);
+}
+
+
+/* =========================================
+   TEACHER LIST
+   ========================================= */
+
+#teacherList {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 20px;
+}
+
+
+/* =========================================
+   TEACHER CARD
+   ========================================= */
+
+.teacher-card {
+    background: white;
+
+    padding: 22px;
+
+    border-radius: 18px;
+
+    box-shadow:
+        0 5px 20px
+        rgba(0, 0, 0, 0.07);
+
+    transition: 0.2s;
+}
+
+.teacher-card:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 25px
+        rgba(0, 0, 0, 0.1);
+}
+
+.teacher-card h3 {
+    font-size: 19px;
+    font-weight: 700;
+
+    margin-bottom: 8px;
+
+    color: #333;
+}
+
+.teacher-card p {
+    font-size: 14px;
+
+    color: #666;
+
+    margin-bottom: 5px;
+}
+
+
+/* =========================================
+   STATUS
+   ========================================= */
+
+.status {
+    display: inline-block;
+
+    margin-top: 8px;
+
+    padding: 5px 12px;
+
+    border-radius: 20px;
+
+    font-size: 12px;
+
+    font-weight: 600;
+}
+
+.status.active {
+    background: #e4f8ec;
+    color: #159447;
+}
+
+.status.inactive {
+    background: #ffe5e5;
+    color: #d93636;
+}
+
+
+/* =========================================
+   TEACHER ACTIONS
+   ========================================= */
+
+.teacher-actions {
+    display: flex;
+
+    gap: 10px;
+
+    margin-top: 18px;
+}
+
+.teacher-actions button {
+    border: none;
+
+    padding: 9px 15px;
+
+    border-radius: 9px;
+
+    font-family: 'Poppins', sans-serif;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.edit-btn {
+    background: #eeeaff;
+    color: #6c63ff;
+}
+
+.edit-btn:hover {
+    background: #ddd8ff;
+}
+
+.delete-btn {
+    background: #ffe5e5;
+    color: #e53935;
+}
+
+.delete-btn:hover {
+    background: #ffd2d2;
+}
+
+
+/* =========================================
+   LOADING
+   ========================================= */
+
+.loading {
+    background: white;
+
+    padding: 40px;
+
+    border-radius: 18px;
+
+    text-align: center;
+
+    color: #777;
+
+    grid-column: 1 / -1;
+}
+
+
+/* =========================================
+   EMPTY STATE
+   ========================================= */
+
+.empty {
+    background: white;
+
+    padding: 40px;
+
+    border-radius: 18px;
+
+    text-align: center;
+
+    color: #888;
+
+    grid-column: 1 / -1;
+}
+
+
+/* =========================================
+   MODAL
+   ========================================= */
+
+#teacherModal {
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    background:
+        rgba(0, 0, 0, 0.45);
+
+    justify-content: center;
+
+    align-items: center;
+
+    padding: 20px;
+
+    z-index: 999;
+}
+
+
+/* =========================================
+   MODAL CONTENT
+   ========================================= */
+
+.modal-content {
+    width: 100%;
+
+    max-width: 450px;
+
+    background: white;
+
+    padding: 28px;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 15px 40px
+        rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h2 {
+    color: #6c63ff;
+
+    font-size: 24px;
+
+    margin-bottom: 20px;
+}
+
+
+/* =========================================
+   INPUTS
+   ========================================= */
+
+.modal-content input {
+    width: 100%;
+
+    padding: 13px 14px;
+
+    margin-bottom: 14px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 11px;
+
+    font-family: 'Poppins', sans-serif;
+
+    font-size: 14px;
+
+    outline: none;
+}
+
+.modal-content input:focus {
+    border-color: #6c63ff;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(108, 99, 255, 0.1);
+}
+
+
+/* =========================================
+   STATUS OPTIONS
+   ========================================= */
+
+.status-group {
+    margin: 5px 0 18px;
+}
+
+.status-group > label {
+    display: block;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    margin-bottom: 8px;
+}
+
+.status-options {
+    display: flex;
+
+    gap: 20px;
+}
+
+.status-options label {
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    font-size: 14px;
+
+    font-weight: 400;
+}
+
+.status-options input {
+    width: auto;
+
+    margin: 0;
+}
+
+
+/* =========================================
+   MODAL BUTTONS
+   ========================================= */
+
+.modal-buttons {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    margin-top: 5px;
+}
+
+.modal-buttons button {
+    border: none;
+
+    padding: 11px 20px;
+
+    border-radius: 10px;
+
+    font-family: 'Poppins', sans-serif;
+
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.save-btn {
+    background: #6c63ff;
+
+    color: white;
+}
+
+.save-btn:hover {
+    background: #554cff;
+}
+
+.cancel-btn {
+    background: #eee;
+
+    color: #555;
+}
+
+.cancel-btn:hover {
+    background: #ddd;
+}
+
+
+/* =========================================
+   MOBILE
+   ========================================= */
+
+@media (max-width: 768px) {
+
+    .container {
+        padding: 25px 18px;
+    }
+
+    .container > h1 {
+        font-size: 25px;
+    }
+
+    #teacherList {
+        grid-template-columns: 1fr;
+    }
+
+    #openModal {
+        width: 100%;
+    }
+}
+
+
+@media (max-width: 480px) {
+
+    .modal-content {
+        padding: 22px;
+    }
+
+    .modal-buttons {
+        flex-direction: column;
+    }
+
+    .modal-buttons button {
+        width: 100%;
+    }
+}
+
+.back-btn {
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 25px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    background: #e8e7ff;
+    color: #6c63ff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.back-btn:hover {
+    background: #dcd9ff;
+}

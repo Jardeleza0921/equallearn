@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Module Details</title>
+
+<link rel="stylesheet"
+href="../assets/css/style.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Poppins,sans-serif;
+}
+
+body{
+background:#ECECFF;
+display:flex;
+justify-content:center;
+}
+
+.phone{
+width:100%;
+max-width:430px;
+min-height:100vh;
+background:white;
+padding:20px;
+}
+
+.header{
+margin-bottom:25px;
+}
+
+.header h2{
+color:#6C63FF;
+font-size:28px;
+}
+
+.header p{
+color:#666;
+margin-top:8px;
+}
+
+.menu{
+display:grid;
+gap:15px;
+}
+
+.card{
+
+background:white;
+
+padding:20px;
+
+border-radius:18px;
+
+box-shadow:0 5px 20px rgba(0,0,0,.08);
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+cursor:pointer;
+
+transition:.3s;
+
+}
+
+.card:hover{
+
+transform:translateY(-2px);
+
+}
+
+.card h3{
+
+font-size:18px;
+
+}
+
+.arrow{
+
+font-size:24px;
+
+color:#6C63FF;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="phone">
+
+<div class="header">
+
+<h2 id="moduleTitle">
+
+Loading...
+
+</h2>
+
+<p>
+
+Manage this learning module
+
+</p>
+
+</div>
+
+<div class="menu">
+
+<div class="card"
+onclick="location.href='lessons.html'">
+
+<div>
+
+<h3>
+
+📄 Lessons
+
+</h3>
+
+<p>
+
+Manage lessons
+
+</p>
+
+</div>
+
+<div class="arrow">
+
+>
+
+</div>
+
+</div>
+
+<div class="card"
+onclick="location.href='quiz_builder.html'">
+
+<div>
+
+<h3>
+
+📝 Quiz Builder
+
+</h3>
+
+<p>
+
+Manage quizzes
+
+</p>
+
+</div>
+
+<div class="arrow">
+
+>
+
+</div>
+
+</div>
+
+<div class="card"
+onclick="location.href='resources.html'">
+
+<div>
+
+<h3>
+
+📁 Resources
+
+</h3>
+
+<p>
+
+PDF & Videos
+
+</p>
+
+</div>
+
+<div class="arrow">
+
+>
+
+</div>
+
+</div>
+
+<div class="card"
+onclick="location.href='students.html'">
+
+<div>
+
+<h3>
+
+👨‍🎓 Students
+
+</h3>
+
+<p>
+
+Student progress
+
+</p>
+
+</div>
+
+<div class="arrow">
+
+>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script type="module"
+src="../assets/js/module-details.js"></script>
+
+</body>
+
+</html>
