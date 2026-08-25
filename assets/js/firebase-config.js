@@ -18,19 +18,12 @@ import {
 
 
 const firebaseConfig = {
-
-    apiKey: "AIzaSyDs5tws2jGZAS2q-9op_lIgAdyqfIXW4Uw",
-
-    authDomain: "equallearn-eb389.firebaseapp.com",
-
-    projectId: "equallearn-eb389",
-
-    storageBucket: "equallearn-eb389.firebasestorage.app",
-
-    messagingSenderId: "897069961442",
-
-    appId: "1:897069961442:web:98dfabd5efefa1e79a4ebb"
-
+    apiKey: "AIzaSyDLpkH-uQlPy3idTh_rdZgp_SP-rMF298U",
+    authDomain: "equallearn-test.firebaseapp.com",
+    projectId: "equallearn-test",
+    storageBucket: "equallearn-test.firebasestorage.app",
+    messagingSenderId: "708796542875",
+    appId: "1:708796542875:web:1a415e6a8e43e7806ebb3e"
 };
 
 
