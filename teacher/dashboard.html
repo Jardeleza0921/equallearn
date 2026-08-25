@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Teacher Dashboard</title>
+
+<link rel="stylesheet" href="../assets/css/style.css">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Poppins,sans-serif;
+}
+
+body{
+background:#F5F7FF;
+}
+
+.container{
+max-width:430px;
+margin:auto;
+min-height:100vh;
+background:white;
+}
+
+.header{
+
+background:#6C63FF;
+
+color:white;
+
+padding:30px 25px;
+
+border-bottom-left-radius:30px;
+border-bottom-right-radius:30px;
+
+}
+
+.header h2{
+
+font-size:28px;
+
+margin-bottom:5px;
+
+}
+
+.header p{
+
+opacity:.9;
+
+}
+
+.card{
+
+margin:20px;
+
+background:white;
+
+border-radius:20px;
+
+padding:20px;
+
+box-shadow:0 5px 20px rgba(0,0,0,.08);
+
+}
+
+.card h3{
+
+margin-bottom:15px;
+
+}
+
+.stats{
+
+display:grid;
+
+grid-template-columns:repeat(2,1fr);
+
+gap:15px;
+
+}
+
+.box{
+
+background:#F7F7FF;
+
+padding:20px;
+
+border-radius:15px;
+
+text-align:center;
+
+}
+
+.box h1{
+
+color:#6C63FF;
+
+font-size:30px;
+
+}
+
+.box p{
+
+margin-top:8px;
+
+}
+
+.actions{
+
+display:grid;
+
+gap:15px;
+
+}
+
+.action{
+
+background:#6C63FF;
+
+color:white;
+
+text-decoration:none;
+
+padding:18px;
+
+border-radius:15px;
+
+text-align:center;
+
+font-weight:bold;
+
+transition:.3s;
+
+}
+
+.action:hover{
+
+background:#574BDB;
+
+}
+
+.bottom{
+
+position:fixed;
+
+bottom:0;
+
+left:50%;
+
+transform:translateX(-50%);
+
+max-width:430px;
+
+width:100%;
+
+display:flex;
+
+justify-content:space-around;
+
+background:white;
+
+padding:15px;
+
+box-shadow:0 -5px 20px rgba(0,0,0,.08);
+
+}
+
+.bottom a{
+
+text-decoration:none;
+
+color:#666;
+
+font-weight:bold;
+
+}
+
+.active{
+
+color:#6C63FF!important;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+
+<h2>Teacher Panel 👨‍🏫</h2>
+
+<p id="teacherName">Loading...</p>
+
+</div>
+
+<div class="card">
+
+<h3>Overview</h3>
+
+<div class="stats">
+
+<div class="box">
+
+<h1 id="moduleCount">0</h1>
+
+<p>Modules</p>
+
+</div>
+
+<div class="box">
+
+<h1 id="lessonCount">0</h1>
+
+<p>Lessons</p>
+
+</div>
+
+<div class="box">
+
+<h1 id="quizCount">0</h1>
+
+<p>Quizzes</p>
+
+</div>
+
+<div class="box">
+
+<h1 id="studentCount">0</h1>
+
+<p>Students</p>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>Quick Actions</h3>
+
+<div class="actions">
+
+<a href="modules.html" class="action">
+📚 Manage Modules
+</a>
+
+<a href="lessons.html" class="action">
+📄 Manage Lessons
+</a>
+
+<a href="quiz_builder.html" class="action">
+📝 Quiz Builder
+</a>
+
+<a href="students.html" class="action">
+👨‍🎓 Students
+</a>
+
+<a href="../index.html" class="action">
+🚪 Logout
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="bottom">
+
+<a href="#" class="active">
+Home
+</a>
+
+<a href="modules.html">
+Modules
+</a>
+
+<a href="students.html">
+Students
+</a>
+
+<a href="#">
+Profile
+</a>
+
+</div>
+
+<script type="module" src="../assets/js/teacher-dashboard.js"></script>
+
+</body>
+</html>

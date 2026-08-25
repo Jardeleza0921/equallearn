@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Register Teacher - EqualLearn</title>
+
+<link
+rel="stylesheet"
+href="../assets/css/style.css">
+
+<link
+href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+rel="stylesheet">
+
+
+<style>
+
+body{
+
+    margin:0;
+
+    background:#ECECFF;
+
+    font-family:'Poppins', sans-serif;
+
+    display:flex;
+
+    justify-content:center;
+
+    min-height:100vh;
+
+}
+
+
+.container{
+
+    width:100%;
+
+    max-width:500px;
+
+    min-height:100vh;
+
+    background:white;
+
+    padding:35px;
+
+    box-sizing:border-box;
+
+}
+
+
+.title{
+
+    color:#6C63FF;
+
+    font-size:30px;
+
+    font-weight:700;
+
+    margin-bottom:5px;
+
+}
+
+
+.subtitle{
+
+    color:#777;
+
+    margin-top:0;
+
+    margin-bottom:30px;
+
+}
+
+
+.input-group{
+
+    margin-bottom:18px;
+
+}
+
+
+.input-group label{
+
+    display:block;
+
+    font-weight:600;
+
+    margin-bottom:7px;
+
+}
+
+
+.input-group input{
+
+    width:100%;
+
+    padding:14px;
+
+    box-sizing:border-box;
+
+    border:1px solid #ddd;
+
+    border-radius:12px;
+
+    font-family:'Poppins';
+
+    font-size:15px;
+
+    outline:none;
+
+}
+
+
+.input-group input:focus{
+
+    border-color:#6C63FF;
+
+}
+
+
+.btn{
+
+    width:100%;
+
+    padding:15px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#6C63FF;
+
+    color:white;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    font-family:'Poppins';
+
+    cursor:pointer;
+
+}
+
+
+.btn:hover{
+
+    background:#5449ff;
+
+}
+
+
+.btn:disabled{
+
+    opacity:.6;
+
+    cursor:not-allowed;
+
+}
+
+
+.back{
+
+    display:block;
+
+    text-align:center;
+
+    margin-top:20px;
+
+    color:#777;
+
+    text-decoration:none;
+
+}
+
+
+#message{
+
+    display:none;
+
+    padding:14px;
+
+    border-radius:10px;
+
+    text-align:center;
+
+    margin-bottom:20px;
+
+}
+
+
+.success{
+
+    display:block !important;
+
+    background:#ddffdd;
+
+    color:green;
+
+}
+
+
+.error{
+
+    display:block !important;
+
+    background:#ffe5e5;
+
+    color:red;
+
+}
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+<h1 class="title">
+
+Register Teacher
+
+</h1>
+
+
+<p class="subtitle">
+
+Create a new teacher account
+
+</p>
+
+
+<div id="message"></div>
+
+
+<form id="teacherForm">
+
+
+<div class="input-group">
+
+<label>
+
+Full Name
+
+</label>
+
+<input
+type="text"
+id="fullname"
+placeholder="Enter teacher name"
+required>
+
+</div>
+
+
+<div class="input-group">
+
+<label>
+
+Email
+
+</label>
+
+<input
+type="email"
+id="email"
+placeholder="teacher@equallearn.com"
+required>
+
+</div>
+
+
+<div class="input-group">
+
+<label>
+
+Password
+
+</label>
+
+<input
+type="password"
+id="password"
+placeholder="Enter password"
+minlength="6"
+required>
+
+</div>
+
+
+<div class="input-group">
+
+<label>
+
+Department
+
+</label>
+
+<input
+type="text"
+id="department"
+placeholder="e.g. GAD"
+required>
+
+</div>
+
+
+<button
+type="submit"
+class="btn"
+id="createButton">
+
+Create Teacher
+
+</button>
+
+
+</form>
+
+
+<a
+href="dashboard.html"
+class="back">
+
+← Back to Admin Dashboard
+
+</a>
+
+
+</div>
+
+
+<script
+type="module"
+src="../assets/js/register-teacher.js">
+</script>
+
+
+</body>
+
+</html>
