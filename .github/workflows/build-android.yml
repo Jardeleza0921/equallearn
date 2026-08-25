@@ -1,0 +1,45 @@
+name: Build EqualLearn APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install dependencies
+        run: npm install
+      - name: Prepare web assets
+        run: npm run mobile:build-web
+      - name: Create Android project
+        run: npx cap add android
+      - name: Generate app icon and splash
+        run: npx @capacitor/assets generate --android --assetPath resources --iconBackgroundColor '#111827' --iconBackgroundColorDark '#0b1020' --splashBackgroundColor '#111827' --splashBackgroundColorDark '#0b1020'
+      - name: Sync Capacitor
+        run: npx cap sync android
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk EqualLearn.apk
+      - name: Upload EqualLearn APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: EqualLearn
+          path: EqualLearn.apk

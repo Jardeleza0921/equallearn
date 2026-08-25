@@ -1,0 +1,776 @@
+/* =========================================
+   TEACHER MODULES
+========================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+
+body {
+
+    margin: 0;
+
+    background: #ECECFF;
+
+    font-family: "Poppins", sans-serif;
+
+    display: flex;
+
+    justify-content: center;
+
+}
+
+
+.phone {
+
+    width: 100%;
+
+    max-width: 430px;
+
+    min-height: 100vh;
+
+    background: white;
+
+    padding: 20px;
+
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.page-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: flex-start;
+
+    gap: 15px;
+
+    margin-bottom: 20px;
+
+}
+
+
+.page-header h1 {
+
+    margin: 0;
+
+    color: #6C63FF;
+
+    font-size: 28px;
+
+}
+
+
+.page-header p {
+
+    margin: 5px 0 0;
+
+    color: #777;
+
+    font-size: 13px;
+
+}
+
+
+.back-btn {
+
+    border: none;
+
+    background: #F0EEFF;
+
+    color: #6C63FF;
+
+    padding: 10px 14px;
+
+    border-radius: 10px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+
+}
+
+
+.back-btn:hover {
+
+    background: #E3E0FF;
+
+}
+
+
+/* =========================================
+   TOOLBAR
+========================================= */
+
+.toolbar {
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    margin-bottom: 18px;
+
+}
+
+
+.add-btn {
+
+    border: none;
+
+    background: #6C63FF;
+
+    color: white;
+
+    padding: 12px 18px;
+
+    border-radius: 12px;
+
+    font-family: inherit;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+}
+
+
+.add-btn:hover {
+
+    background: #584FF0;
+
+}
+
+
+/* =========================================
+   MODULE CARD
+========================================= */
+
+.module-card {
+
+    background: white;
+
+    border-radius: 18px;
+
+    padding: 20px;
+
+    margin-bottom: 16px;
+
+    box-shadow:
+        0 6px 25px rgba(0,0,0,.08);
+
+    border: 1px solid #f0efff;
+
+}
+
+
+.module-top {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: flex-start;
+
+    gap: 10px;
+
+}
+
+
+.module-title {
+
+    margin: 0;
+
+    font-size: 18px;
+
+    color: #111;
+
+}
+
+
+.module-description {
+
+    color: #666;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+
+    margin: 8px 0 14px;
+
+}
+
+
+.status {
+
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    text-transform: capitalize;
+
+}
+
+
+.status.active {
+
+    background: #DDF8E8;
+
+    color: #149447;
+
+}
+
+
+.status.draft {
+
+    background: #FFF2D6;
+
+    color: #B97700;
+
+}
+
+
+.status.archived {
+
+    background: #EEEEEE;
+
+    color: #777;
+
+}
+
+
+/* =========================================
+   FILE
+========================================= */
+
+.file-link {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    background: #F5F4FF;
+
+    padding: 12px;
+
+    border-radius: 12px;
+
+    text-decoration: none;
+
+    color: #6C63FF;
+
+    margin-top: 12px;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+}
+
+
+.file-link:hover {
+
+    background: #EDEBFF;
+
+}
+
+
+.file-icon {
+
+    font-size: 22px;
+
+}
+
+
+.module-info {
+
+    color: #888;
+
+    font-size: 11px;
+
+    margin-top: 12px;
+
+}
+
+
+/* =========================================
+   ACTIONS
+========================================= */
+
+.module-actions {
+
+    display: flex;
+
+    gap: 10px;
+
+    margin-top: 16px;
+
+}
+
+
+.edit-btn,
+.delete-btn {
+
+    flex: 1;
+
+    border: none;
+
+    padding: 11px;
+
+    border-radius: 10px;
+
+    font-family: inherit;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+}
+
+
+.edit-btn {
+
+    background: #E9E7FF;
+
+    color: #6C63FF;
+
+}
+
+
+.delete-btn {
+
+    background: #FFE3E3;
+
+    color: #F44336;
+
+}
+
+
+.edit-btn:hover {
+
+    background: #DDD9FF;
+
+}
+
+
+.delete-btn:hover {
+
+    background: #FFD2D2;
+
+}
+
+
+/* =========================================
+   MODAL
+========================================= */
+
+.modal {
+
+    display: none;
+
+    position: fixed;
+
+    inset: 0;
+
+    background: rgba(0,0,0,.45);
+
+    z-index: 9999;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 20px;
+
+}
+
+
+.modal.show {
+
+    display: flex;
+
+}
+
+
+.modal-content {
+
+    background: white;
+
+    width: 100%;
+
+    max-width: 430px;
+
+    max-height: 90vh;
+
+    overflow-y: auto;
+
+    padding: 22px;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 20px 50px rgba(0,0,0,.2);
+
+}
+
+
+.modal-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: flex-start;
+
+    margin-bottom: 18px;
+
+}
+
+
+.modal-header h2 {
+
+    margin: 0;
+
+}
+
+
+.modal-header p {
+
+    margin: 4px 0;
+
+    font-size: 12px;
+
+    color: #888;
+
+}
+
+
+.close-btn {
+
+    border: none;
+
+    background: #F1F1F1;
+
+    width: 34px;
+
+    height: 34px;
+
+    border-radius: 50%;
+
+    font-size: 22px;
+
+    cursor: pointer;
+
+}
+
+
+/* =========================================
+   FORM
+========================================= */
+
+.modal-content label {
+
+    display: block;
+
+    margin-top: 12px;
+
+    margin-bottom: 6px;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+}
+
+
+.modal-content input,
+.modal-content textarea,
+.modal-content select {
+
+    width: 100%;
+
+    padding: 12px;
+
+    border: 1px solid #DDD;
+
+    border-radius: 10px;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    outline: none;
+
+}
+
+
+.modal-content textarea {
+
+    resize: vertical;
+
+}
+
+
+.modal-content input:focus,
+.modal-content textarea:focus,
+.modal-content select:focus {
+
+    border-color: #6C63FF;
+
+}
+
+
+/* =========================================
+   FILE INPUT
+========================================= */
+
+.file-box {
+
+    background: #F7F6FF;
+
+    border: 2px dashed #D5D1FF;
+
+    padding: 15px;
+
+    border-radius: 12px;
+
+}
+
+
+.file-box input {
+
+    border: none;
+
+    padding: 5px;
+
+    background: transparent;
+
+}
+
+
+.file-box small {
+
+    display: block;
+
+    margin-top: 7px;
+
+    color: #888;
+
+    font-size: 10px;
+
+}
+
+
+.existing-file,
+.selected-file {
+
+    margin-top: 10px;
+
+    padding: 10px;
+
+    border-radius: 10px;
+
+    font-size: 12px;
+
+}
+
+
+.existing-file {
+
+    background: #EEF9F1;
+
+    color: #198754;
+
+}
+
+
+.selected-file {
+
+    background: #F0EEFF;
+
+    color: #6C63FF;
+
+}
+
+
+/* =========================================
+   PROGRESS
+========================================= */
+
+.upload-progress {
+
+    margin-top: 15px;
+
+}
+
+
+.progress-bar {
+
+    width: 100%;
+
+    height: 8px;
+
+    background: #eee;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+
+}
+
+
+.progress-bar span {
+
+    display: block;
+
+    width: 0%;
+
+    height: 100%;
+
+    background: #6C63FF;
+
+    transition: width .2s;
+
+}
+
+
+.upload-progress p {
+
+    font-size: 11px;
+
+    color: #777;
+
+}
+
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+.modal-actions {
+
+    display: flex;
+
+    gap: 10px;
+
+    margin-top: 20px;
+
+}
+
+
+.cancel-btn,
+.save-btn {
+
+    flex: 1;
+
+    border: none;
+
+    padding: 13px;
+
+    border-radius: 10px;
+
+    font-family: inherit;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+}
+
+
+.cancel-btn {
+
+    background: #999;
+
+    color: white;
+
+}
+
+
+.save-btn {
+
+    background: #6C63FF;
+
+    color: white;
+
+}
+
+
+.save-btn:disabled {
+
+    opacity: .6;
+
+    cursor: not-allowed;
+
+}
+
+
+.message {
+
+    text-align: center;
+
+    font-size: 12px;
+
+    margin-top: 12px;
+
+}
+
+
+.message.error {
+
+    color: #F44336;
+
+}
+
+
+.message.success {
+
+    color: #198754;
+
+}
+
+
+/* =========================================
+   LOADING / EMPTY
+========================================= */
+
+.loading,
+.empty {
+
+    text-align: center;
+
+    color: #888;
+
+    padding: 40px 10px;
+
+}
+
+
+@media(max-width:430px) {
+
+    .phone {
+
+        padding: 16px;
+
+    }
+
+    .page-header h1 {
+
+        font-size: 24px;
+
+    }
+
+}

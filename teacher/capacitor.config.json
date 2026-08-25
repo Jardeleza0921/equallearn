@@ -1,0 +1,13 @@
+{
+  "appId": "com.equallearn.app",
+  "appName": "EqualLearn",
+  "webDir": "www",
+  "server": {
+    "url": "https://jardeleza0921.github.io/equallearn/",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
