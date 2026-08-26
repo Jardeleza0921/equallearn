@@ -7,8 +7,15 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
 
+[[headers]]
+  for = "/downloads/*.apk"
+  [headers.values]
+    Content-Type = "application/vnd.android.package-archive"
+    Content-Disposition = "attachment; filename=EqualLearn.apk"
+    Cache-Control = "public, max-age=0, must-revalidate"
+
 [[redirects]]
   from = "/apk"
-  to = "https://github.com/Jardeleza0921/equallearn/releases/download/mobile-preview/EqualLearn.apk"
+  to = "/downloads/EqualLearn.apk"
   status = 302
   force = true

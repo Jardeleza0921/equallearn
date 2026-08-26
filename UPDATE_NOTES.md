@@ -21,3 +21,10 @@ This update focuses on classroom usability, responsiveness, and the PTC-inspired
 - Added `/apk` Netlify redirect for a short direct-download URL.
 - The Android workflow now builds automatically from both `main` and `equallearn-update`.
 - Preview APK builds point to `https://equallearn.netlify.app/`; main builds keep the stable GitHub Pages URL.
+
+
+## Netlify direct APK deployment
+- The `equallearn-update` branch now builds a preview APK and deploys it directly with the website to Netlify.
+- Visitors download `https://equallearn.netlify.app/downloads/EqualLearn.apk` (or `/apk`) and do not need GitHub Artifacts or Releases.
+- Repository secrets required: `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID`.
+- Learning Content modals are now true overlays; redundant X controls were removed, save/cancel buttons were polished, and the theme toggle no longer overlaps the topbar.

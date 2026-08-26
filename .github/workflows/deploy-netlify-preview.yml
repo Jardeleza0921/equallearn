@@ -1,0 +1,86 @@
+name: Deploy EqualLearn Netlify Preview + APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ equallearn-update ]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout preview branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Point preview APK to Netlify
+        run: |
+          node -e "const fs=require('fs');const p='capacitor.config.json';const c=JSON.parse(fs.readFileSync(p,'utf8'));c.server.url='https://equallearn.netlify.app/';fs.writeFileSync(p,JSON.stringify(c,null,2)+'\n')"
+
+      - name: Prepare web assets
+        run: npm run mobile:build-web
+
+      - name: Create Android project
+        run: npx cap add android
+
+      - name: Generate app icon and splash
+        run: npx @capacitor/assets generate --android --assetPath resources --iconBackgroundColor '#0f7a3d' --iconBackgroundColorDark '#07110b' --splashBackgroundColor '#f3f7f4' --splashBackgroundColorDark '#07110b'
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Build preview APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: Put APK inside the Netlify website
+        run: |
+          mkdir -p www/downloads
+          cp android/app/build/outputs/apk/debug/app-debug.apk www/downloads/EqualLearn.apk
+          cat > www/_redirects <<'EOF'
+          /apk /downloads/EqualLearn.apk 302!
+          EOF
+          cat > www/_headers <<'EOF'
+          /downloads/*.apk
+            Content-Type: application/vnd.android.package-archive
+            Content-Disposition: attachment; filename=EqualLearn.apk
+            Cache-Control: public, max-age=0, must-revalidate
+          EOF
+          ls -lh www/downloads/EqualLearn.apk
+
+      - name: Deploy website and APK directly to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          if [ -z "$NETLIFY_AUTH_TOKEN" ] || [ -z "$NETLIFY_SITE_ID" ]; then
+            echo "Missing NETLIFY_AUTH_TOKEN or NETLIFY_SITE_ID repository secret."
+            exit 1
+          fi
+          npx --yes netlify-cli@latest deploy \
+            --dir=www \
+            --prod \
+            --site="$NETLIFY_SITE_ID" \
+            --auth="$NETLIFY_AUTH_TOKEN" \
+            --message="EqualLearn preview ${GITHUB_SHA}"
+
+      - name: Show direct install URL
+        run: |
+          echo "EqualLearn APK: https://equallearn.netlify.app/downloads/EqualLearn.apk"
+          echo "Short install URL: https://equallearn.netlify.app/apk"
