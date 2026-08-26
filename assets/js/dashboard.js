@@ -59,6 +59,8 @@ onAuthStateChanged(auth, async (user) => {
 
         await loadNotifications(user.uid);
 
+        await loadStudentProgress(user.uid);
+
     }
 
     catch (error) {
@@ -154,99 +156,39 @@ async function loadStudent(uid) {
 
 async function findClassAssignment(student) {
 
-    const cohort =
-        student.cohort ||
-        student.cohortId ||
-        "";
+    const cohort = String(student.cohort || student.cohortId || "");
+    const course = String(student.course || "");
+    const yearLevel = String(student.yearLevel || "");
 
-    const course =
-        student.course ||
-        "";
-
-    const yearLevel =
-        student.yearLevel ||
-        "";
-
-
-    if (
-        !cohort ||
-        !course ||
-        !yearLevel
-    ) {
-
-        return;
-    }
-
+    if (!cohort || !course || !yearLevel) return;
 
     try {
-
-        const assignmentQuery =
-            query(
-                collection(
-                    db,
-                    "classAssignments"
-                ),
-
-                where(
-                    "cohort",
-                    "==",
-                    cohort
-                ),
-
-                where(
-                    "yearLevel",
-                    "==",
-                    yearLevel
-                ),
-
-                limit(1)
+        // Admin Class Assignments are stored in teacherAssignments.
+        // Read the small collection and match on the client to avoid extra index requirements.
+        const snapshot = await getDocs(collection(db, "teacherAssignments"));
+        const record = snapshot.docs
+            .map(item => item.data())
+            .find(assignment =>
+                (assignment.status || "active") !== "inactive" &&
+                String(assignment.cohort || "") === cohort &&
+                String(assignment.course || "") === course &&
+                String(assignment.yearLevel || "") === yearLevel
             );
 
-
-        const snapshot =
-            await getDocs(
-                assignmentQuery
-            );
-
-
-        if (snapshot.empty) {
-
-            return;
-        }
-
-
-        const assignment =
-            snapshot.docs[0].data();
-
-
-        // Section
-
-        const section =
-            assignment.section ||
-            `${course}-${yearLevel}`;
-
+        if (!record) return;
 
         studentSection.textContent =
-            section;
-
-
-        // Teacher
+            record.className ||
+            record.section ||
+            `${cohort}${course} · ${yearLevel}`;
 
         studentTeacher.textContent =
-            assignment.teacherName ||
+            record.teacherName ||
             "Not yet assigned";
-
     }
-
     catch (error) {
-
-        console.error(
-            "Class assignment error:",
-            error
-        );
-
+        console.error("Class assignment error:", error);
     }
-
 }
 
 
@@ -415,4 +357,44 @@ function formatDate(timestamp) {
 
     }
 
+}
+
+// ======================================================
+// LIVE STUDENT PROGRESS SUMMARY
+// ======================================================
+async function loadStudentProgress(uid) {
+    const ring = document.getElementById("studentProgressRing");
+    const percentEl = document.getElementById("studentProgressPercent");
+    const bar = document.getElementById("studentProgressBar");
+    const title = document.getElementById("studentProgressTitle");
+    const meta = document.getElementById("studentProgressMeta");
+    if (!ring || !percentEl || !bar) return;
+    try {
+        const [questionSnapshot, progressSnapshot] = await Promise.all([
+            getDocs(collection(db, "questions")),
+            getDocs(query(collection(db, "progress"), where("userId", "==", uid)))
+        ]);
+        const quizLessonIds = new Set();
+        questionSnapshot.forEach(item => { const lessonId = item.data().lessonId; if (lessonId) quizLessonIds.add(lessonId); });
+        const completedLessonIds = new Set();
+        let scoreTotal = 0, scoreCount = 0;
+        progressSnapshot.forEach(item => {
+            const data = item.data();
+            if (data.completed && data.lessonId && quizLessonIds.has(data.lessonId)) completedLessonIds.add(data.lessonId);
+            if (Number.isFinite(Number(data.percentage))) { scoreTotal += Number(data.percentage); scoreCount++; }
+        });
+        const total = quizLessonIds.size;
+        const completed = completedLessonIds.size;
+        const pct = total ? Math.round(completed / total * 100) : 0;
+        const avg = scoreCount ? Math.round(scoreTotal / scoreCount) : 0;
+        percentEl.textContent = `${pct}%`;
+        bar.style.width = `${pct}%`;
+        ring.style.background = `conic-gradient(var(--el-primary) 0 ${pct}%, #e1e9e3 ${pct}% 100%)`;
+        title.textContent = total ? `${completed} of ${total} quizzes completed` : "No quizzes available yet";
+        meta.textContent = scoreCount ? `Average quiz score: ${avg}%` : "Your quiz results will appear here after your first attempt.";
+    } catch (error) {
+        console.error("Student progress summary error:", error);
+        title.textContent = "Progress unavailable";
+        meta.textContent = "Open Progress to review saved results.";
+    }
 }

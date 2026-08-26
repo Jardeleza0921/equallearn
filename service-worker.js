@@ -1,9 +1,9 @@
-const CACHE='equallearn-shell-v4';
+const CACHE='equallearn-shell-v5';
 const CORE=[
   './','./index.html','./login.html','./register.html',
   './assets/css/equallearn.css','./assets/css/loading-screen.css',
   './assets/js/icons.js','./assets/js/theme.js','./assets/js/password-toggle.js','./assets/js/loading-screen.js',
-  './assets/icons/icon-192.png','./assets/icons/icon-512.png'
+  './assets/icons/icon-192.png','./assets/icons/icon-512.png','./assets/icons/equallearn-wordmark.svg','./assets/icons/equallearn-wordmark-light.svg'
 ];
 
 self.addEventListener('install',event=>event.waitUntil(

@@ -6,7 +6,7 @@ on:
     branches: [ main ]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   android:
@@ -30,7 +30,7 @@ jobs:
       - name: Create Android project
         run: npx cap add android
       - name: Generate app icon and splash
-        run: npx @capacitor/assets generate --android --assetPath resources --iconBackgroundColor '#111827' --iconBackgroundColorDark '#0b1020' --splashBackgroundColor '#111827' --splashBackgroundColorDark '#0b1020'
+        run: npx @capacitor/assets generate --android --assetPath resources --iconBackgroundColor '#0f7a3d' --iconBackgroundColorDark '#07110b' --splashBackgroundColor '#f3f7f4' --splashBackgroundColorDark '#07110b'
       - name: Sync Capacitor
         run: npx cap sync android
       - name: Build debug APK
@@ -38,8 +38,18 @@ jobs:
         run: ./gradlew assembleDebug
       - name: Rename APK
         run: cp android/app/build/outputs/apk/debug/app-debug.apk EqualLearn.apk
-      - name: Upload EqualLearn APK
+      - name: Upload EqualLearn APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: EqualLearn
           path: EqualLearn.apk
+      - name: Publish direct-download APK release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete mobile-latest --cleanup-tag -y || true
+          git tag -f mobile-latest
+          git push origin -f mobile-latest
+          gh release create mobile-latest EqualLearn.apk \
+            --title "EqualLearn Android" \
+            --notes "Latest EqualLearn Android APK built automatically from the main branch."

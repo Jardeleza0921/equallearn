@@ -1,5 +1,5 @@
 import { auth } from "./firebase-config.js";
-import { icon } from "./icons.js";
+import { icon, hydrateIcons } from "./icons.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
 
 const path = location.pathname.toLowerCase();
@@ -10,10 +10,10 @@ const labels = {
     ['dashboard.html','home','Dashboard'],['students.html','users','Students'],['manage-teachers.html','teacher','Teachers'],['register-teacher.html','userPlus','Register Teacher'],['class-assignments.html','classes','Class Assignments'],['reports.html','chart','Reports'],['settings.html','settings','Settings']
   ]},
   teacher: { title: 'Teacher', nav: [
-    ['dashboard.html','home','Dashboard'],['modules.html','modules','Modules'],['lessons.html','lesson','Lessons'],['students.html','users','Students'],['quiz_builder.html','quiz','Quiz Builder']
+    ['dashboard.html','home','Dashboard'],['modules.html','bookOpen','Learning Content'],['students.html','users','Students'],['quiz_builder.html','quiz','Quiz Builder'],['profile.html','profile','Profile']
   ]},
   student: { title: 'Student', nav: [
-    ['dashboard.html','home','Dashboard'],['modules.html','modules','Modules'],['progress.html','progress','Progress'],['profile.html','profile','Profile']
+    ['dashboard.html','home','Dashboard'],['modules.html','bookOpen','Learning'],['quizzes.html','quiz','Quizzes'],['progress.html','progress','Progress'],['profile.html','profile','Profile']
   ]}
 };
 
@@ -25,10 +25,11 @@ if (role) {
     const shell = document.createElement('div'); shell.className = 'el-app-shell';
     const aside = document.createElement('aside'); aside.className = 'el-sidebar';
     const current = path.split('/').pop() || 'dashboard.html';
+    const activeFile = role === 'teacher' && current === 'lessons.html' ? 'modules.html' : current;
     aside.innerHTML = `
-      <div class="el-sidebar-brand"><span class="el-wordmark-mark"><img src="../assets/icons/icon-192.png" alt=""></span><span class="el-wordmark-text">EqualLearn</span></div>
+      <a class="el-sidebar-brand" href="dashboard.html" aria-label="EqualLearn dashboard"><img class="el-wordmark-image" src="../assets/icons/equallearn-wordmark-light.svg" alt="EqualLearn"></a>
       <div class="el-role-chip">${labels[role].title} workspace</div>
-      <nav class="el-nav">${labels[role].nav.map(([href,iconName,name]) => `<a href="${href}" class="${current===href?'active':''}"><span class="el-nav-icon">${icon(iconName,19)}</span><span>${name}</span></a>`).join('')}</nav>
+      <nav class="el-nav">${labels[role].nav.map(([href,iconName,name]) => `<a href="${href}" class="${activeFile===href?'active':''}"><span class="el-nav-icon">${icon(iconName,19)}</span><span>${name}</span></a>`).join('')}</nav>
       <div class="el-sidebar-bottom el-nav"><a href="../login.html" data-el-logout><span class="el-nav-icon">${icon('logout',19)}</span><span>Logout</span></a></div>`;
     const main = document.createElement('main'); main.className = 'el-app-main';
     const top = document.createElement('div'); top.className = 'el-topbar';
@@ -41,7 +42,6 @@ if (role) {
   }
 }
 
-
 const logoutLink = document.querySelector('[data-el-logout]');
 if (logoutLink) {
   logoutLink.addEventListener('click', async (event) => {
@@ -51,15 +51,16 @@ if (logoutLink) {
   });
 }
 
-const sourceName = document.querySelector('#adminName, #teacherName, #studentName');
+const sourceName = document.querySelector('#adminName, #teacherName, #studentName, #profileName, #teacherProfileName');
 const shellName = document.querySelector('[data-el-user-name]');
 if (sourceName && shellName) {
-  const syncName = () => { const value = sourceName.textContent.trim(); if (value && !value.toLowerCase().includes('loading')) shellName.textContent = value; };
+  const syncName = () => { const value = sourceName.value || sourceName.textContent || ''; const clean=value.trim(); if (clean && !clean.toLowerCase().includes('loading')) shellName.textContent = clean; };
   syncName();
-  new MutationObserver(syncName).observe(sourceName, { childList:true, subtree:true, characterData:true });
+  new MutationObserver(syncName).observe(sourceName, { childList:true, subtree:true, characterData:true, attributes:true, attributeFilter:['value'] });
+  sourceName.addEventListener?.('input', syncName);
 }
 
-// Fast visual feedback while moving between EqualLearn pages.
+hydrateIcons();
 const routeProgress = document.createElement('div');
 routeProgress.className = 'el-route-progress';
 routeProgress.setAttribute('aria-hidden', 'true');

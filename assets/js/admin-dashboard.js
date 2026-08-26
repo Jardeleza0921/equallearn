@@ -11,7 +11,8 @@ import {
     collection,
     getDocs,
     query,
-    where
+    where,
+    onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 
@@ -120,6 +121,7 @@ onAuthStateChanged(auth, async (user) => {
         // ==================================================
 
         await loadDashboardCounts();
+        watchPlatformActivity();
 
 
     }
@@ -247,3 +249,31 @@ if (logoutBtn) {
     );
 
 }
+
+// ======================================================
+// LIVE PLATFORM ACTIVITY (last 7 days)
+// ======================================================
+function watchPlatformActivity() {
+    const bars = Array.from(document.querySelectorAll("#adminActivityChart .el-bar"));
+    const labels = Array.from(document.querySelectorAll("#adminActivityLabels span"));
+    const meta = document.getElementById("adminActivityMeta");
+    if (!bars.length || !labels.length) return;
+    const days = [];
+    const today = new Date(); today.setHours(0,0,0,0);
+    for (let i=6;i>=0;i--) { const d=new Date(today); d.setDate(today.getDate()-i); days.push(d); }
+    labels.forEach((el,i)=>el.textContent=days[i].toLocaleDateString(undefined,{weekday:'short'}));
+    onSnapshot(collection(db,"progress"), snapshot => {
+        const counts = Array(7).fill(0);
+        snapshot.forEach(item => {
+            const data=item.data(); const time=toMillis(data.completedAt); if(!time)return;
+            const d=new Date(time); d.setHours(0,0,0,0);
+            const idx=days.findIndex(day=>day.getTime()===d.getTime());
+            if(idx>=0 && data.completed) counts[idx]++;
+        });
+        const max=Math.max(1,...counts);
+        bars.forEach((bar,i)=>{ const pct=counts[i] ? Math.max(12,Math.round(counts[i]/max*100)) : 4; bar.style.height=`${pct}%`; bar.title=`${counts[i]} completion${counts[i]===1?'':'s'}`; });
+        const total=counts.reduce((a,b)=>a+b,0);
+        if(meta) meta.textContent=`${total} completed quiz${total===1?'':'zes'} recorded in the last 7 days.`;
+    }, error => { console.error("Admin activity listener error:",error); if(meta) meta.textContent="Live activity is unavailable with the current Firestore permissions."; });
+}
+function toMillis(ts){ if(!ts)return 0; if(typeof ts.toMillis==='function')return ts.toMillis(); if(ts.seconds)return ts.seconds*1000; const n=new Date(ts).getTime(); return Number.isFinite(n)?n:0; }

@@ -1,22 +1,7 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js';
-import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js';
-
-const fields = {
-  name: document.getElementById('profileName'), email: document.getElementById('profileEmail'),
-  number: document.getElementById('profileStudentNumber'), course: document.getElementById('profileCourse'),
-  year: document.getElementById('profileYear'), cohort: document.getElementById('profileCohort')
-};
-onAuthStateChanged(auth, async user => {
-  if (!user) { location.href = '../login.html'; return; }
-  const snap = await getDoc(doc(db,'users',user.uid));
-  if (!snap.exists()) return;
-  const data = snap.data();
-  if ((data.role||'').toLowerCase() !== 'student') { location.href = '../login.html'; return; }
-  fields.name.value = data.fullname || '';
-  fields.email.value = data.email || user.email || '';
-  fields.number.value = data.studentNumber || '';
-  fields.course.value = data.course || '';
-  fields.year.value = data.yearLevel || '';
-  fields.cohort.value = data.cohort || data.cohortId || '';
-});
+import { doc, getDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js';
+const $=id=>document.getElementById(id);let uid='';
+onAuthStateChanged(auth,async user=>{if(!user){location.href='../login.html';return;}uid=user.uid;try{const snap=await getDoc(doc(db,'users',uid));if(!snap.exists())throw new Error('Student profile not found.');const d=snap.data();if((d.role||'').toLowerCase()!=='student'){location.href='../login.html';return;}$('profileName').value=d.fullname||'';$('profileEmail').value=d.email||user.email||'';$('profileStudentNumber').value=d.studentNumber||'';$('profileCourse').value=d.course||'';$('profileYear').value=d.yearLevel||'';$('profileCohort').value=d.cohort||d.cohortId||'';$('profileBio').value=d.bio||'';paint(d.fullname,d.email||user.email);}catch(e){status(e.message,'error');}});
+$('studentProfileForm').addEventListener('submit',async e=>{e.preventDefault();const name=$('profileName').value.trim();if(!name)return status('Please enter your full name.','error');const button=e.submitter;button.disabled=true;button.textContent='Saving…';try{await updateDoc(doc(db,'users',uid),{fullname:name,course:$('profileCourse').value.trim(),yearLevel:$('profileYear').value.trim(),cohort:$('profileCohort').value.trim(),bio:$('profileBio').value.trim(),updatedAt:serverTimestamp()});paint(name,$('profileEmail').value);status('Profile updated successfully.','success');}catch(err){console.error(err);status(err.message||'Unable to update profile.','error');}finally{button.disabled=false;button.innerHTML='<span data-icon="save"></span> Save changes';import('./icons.js').then(m=>m.hydrateIcons());}});
+function paint(name,email){$('profileDisplayName').textContent=name||'Student';$('profileDisplayEmail').textContent=email||'';$('profileAvatar').textContent=initials(name);}function initials(v=''){return v.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'S'}function status(msg,type=''){$('profileStatus').className=`el-form-status ${type}`;$('profileStatus').textContent=msg;}
