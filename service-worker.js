@@ -1,8 +1,8 @@
-const CACHE='equallearn-shell-v5';
+const CACHE='equallearn-shell-v6';
 const CORE=[
-  './','./index.html','./login.html','./register.html',
+  './','./index.html','./about.html','./developers.html','./login.html','./register.html',
   './assets/css/equallearn.css','./assets/css/loading-screen.css',
-  './assets/js/icons.js','./assets/js/theme.js','./assets/js/password-toggle.js','./assets/js/loading-screen.js',
+  './assets/js/icons.js','./assets/js/theme.js','./assets/js/apk-download.js','./assets/js/password-toggle.js','./assets/js/loading-screen.js',
   './assets/icons/icon-192.png','./assets/icons/icon-512.png','./assets/icons/equallearn-wordmark.svg','./assets/icons/equallearn-wordmark-light.svg'
 ];
 

@@ -3,7 +3,7 @@ name: Build EqualLearn APK
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [ main, equallearn-update ]
 
 permissions:
   contents: write
@@ -25,6 +25,10 @@ jobs:
           java-version: '21'
       - name: Install dependencies
         run: npm install
+      - name: Point preview APK to Netlify
+        if: github.ref_name != 'main'
+        run: |
+          node -e "const fs=require('fs');const p='capacitor.config.json';const c=JSON.parse(fs.readFileSync(p,'utf8'));c.server.url='https://equallearn.netlify.app/';fs.writeFileSync(p,JSON.stringify(c,null,2)+'\n')"
       - name: Prepare web assets
         run: npm run mobile:build-web
       - name: Create Android project
@@ -47,9 +51,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete mobile-latest --cleanup-tag -y || true
-          git tag -f mobile-latest
-          git push origin -f mobile-latest
-          gh release create mobile-latest EqualLearn.apk \
-            --title "EqualLearn Android" \
-            --notes "Latest EqualLearn Android APK built automatically from the main branch."
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            TAG="mobile-latest"
+            TITLE="EqualLearn Android"
+            NOTES="Latest stable EqualLearn Android APK built automatically from the main branch."
+          else
+            TAG="mobile-preview"
+            TITLE="EqualLearn Android Preview"
+            NOTES="Latest EqualLearn preview APK built automatically from ${GITHUB_REF_NAME}. This preview opens https://equallearn.netlify.app/."
+          fi
+          gh release delete "$TAG" --cleanup-tag -y || true
+          git tag -f "$TAG"
+          git push origin -f "$TAG"
+          gh release create "$TAG" EqualLearn.apk \
+            --title "$TITLE" \
+            --notes "$NOTES"

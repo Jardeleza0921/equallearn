@@ -13,3 +13,11 @@ This update focuses on classroom usability, responsiveness, and the PTC-inspired
 - Dark theme uses green outlines and stronger contrast.
 - Updated EqualLearn wordmark, app icon, splash screen, and SVG interface icons.
 - Responsive layouts improved for phones, tablets, and desktop.
+
+## Netlify preview, APK, and public information pages
+- Added `about.html` with an overview of EqualLearn and its student, teacher, and administrator workspaces.
+- Added `developers.html` listing the five PTCian developers provided for the project.
+- Added host-aware APK download links: Netlify uses the `mobile-preview` release; the stable site uses `mobile-latest`.
+- Added `/apk` Netlify redirect for a short direct-download URL.
+- The Android workflow now builds automatically from both `main` and `equallearn-update`.
+- Preview APK builds point to `https://equallearn.netlify.app/`; main builds keep the stable GitHub Pages URL.
