@@ -81,8 +81,9 @@ form.addEventListener(
         // ================================================
 
         showLoadingScreen(
-    "Welcome to EqualLearn!"
-);
+            "Welcome back!",
+            "Opening your EqualLearn dashboard…"
+        );
 
 const role =
     (result.user.role || "")
@@ -108,7 +109,7 @@ const role =
                         "admin/dashboard.html";
 
                 },
-                500
+                140
             );
 
             return;
@@ -132,7 +133,7 @@ const role =
                         "teacher/dashboard.html";
 
                 },
-                500
+                140
             );
 
             return;
@@ -153,7 +154,7 @@ const role =
                         "student/dashboard.html";
 
                 },
-                500
+                140
             );
 
             return;

@@ -10,7 +10,7 @@
 }
 
 body {
-    font-family: 'Poppins', sans-serif;
+    font-family:inherit;
     background: #f4f3ff;
     color: #333;
     min-height: 100vh;
@@ -54,7 +54,7 @@ body {
 
     border-radius: 12px;
 
-    font-family: 'Poppins', sans-serif;
+    font-family:inherit;
     font-size: 14px;
     font-weight: 600;
 
@@ -177,7 +177,7 @@ body {
 
     border-radius: 9px;
 
-    font-family: 'Poppins', sans-serif;
+    font-family:inherit;
 
     font-size: 13px;
 
@@ -311,7 +311,7 @@ body {
 
     border-radius: 11px;
 
-    font-family: 'Poppins', sans-serif;
+    font-family:inherit;
 
     font-size: 14px;
 
@@ -391,7 +391,7 @@ body {
 
     border-radius: 10px;
 
-    font-family: 'Poppins', sans-serif;
+    font-family:inherit;
 
     font-weight: 600;
 

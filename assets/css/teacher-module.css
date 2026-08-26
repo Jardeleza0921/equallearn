@@ -13,7 +13,7 @@ body {
 
     background: #ECECFF;
 
-    font-family: "Poppins", sans-serif;
+    font-family:inherit;
 
     display: flex;
 

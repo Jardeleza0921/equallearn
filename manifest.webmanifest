@@ -1,14 +1,29 @@
 {
   "name": "EqualLearn",
   "short_name": "EqualLearn",
-  "description": "A responsive gender equality learning platform for students, teachers, and administrators.",
+  "description": "Responsive learning platform for students, teachers and administrators on web and Android.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f6f7fb",
-  "theme_color": "#635bff",
+  "theme_color": "#5b5cf0",
   "icons": [
-    {"src":"./assets/icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
-    {"src":"./assets/icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+    {
+      "src": "./assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
   ]
 }

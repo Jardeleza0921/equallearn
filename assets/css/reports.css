@@ -1,6 +1,6 @@
 body {
     margin: 0;
-    font-family: 'Poppins', sans-serif;
+    font-family:inherit;
     background: #f0efff;
     color: #222;
 }

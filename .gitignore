@@ -1,14 +1,7 @@
-node_modules/
-android/.gradle/
-android/app/build/
-android/build/
-.DS_Store
-www/
-
-# Generated mobile files
 www/
 android/
 node_modules/
 .gradle/
 *.apk
 *.aab
+.DS_Store
