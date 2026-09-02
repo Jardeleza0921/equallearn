@@ -1,0 +1,6 @@
+import { Tabs } from 'expo-router';
+import { Home, BookOpen, ClipboardCheck, BarChart3, UserRound } from 'lucide-react-native';
+import { useTheme } from '../../src/context/ThemeContext';
+
+const items={home:Home,learning:BookOpen,quizzes:ClipboardCheck,progress:BarChart3,profile:UserRound};
+export default function TabsLayout(){const {theme}=useTheme();return <Tabs screenOptions={({route})=>{const Icon=items[route.name]||Home;return {headerShown:false,tabBarShowLabel:true,tabBarActiveTintColor:theme.primary,tabBarInactiveTintColor:theme.muted,tabBarStyle:{height:70,paddingTop:8,paddingBottom:8,borderTopColor:theme.line,backgroundColor:theme.surface},tabBarLabelStyle:{fontSize:9,fontWeight:'700'},tabBarIcon:({color,size})=><Icon color={color} size={size-2}/>}}}><Tabs.Screen name="home" options={{title:'Home'}}/><Tabs.Screen name="learning" options={{title:'Learning'}}/><Tabs.Screen name="quizzes" options={{title:'Quizzes'}}/><Tabs.Screen name="progress" options={{title:'Progress'}}/><Tabs.Screen name="profile" options={{title:'Profile'}}/></Tabs>}

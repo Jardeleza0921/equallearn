@@ -1,7 +1,10 @@
-www/
-android/
 node_modules/
-.gradle/
-*.apk
-*.aab
+web/dist/
+mobile/.expo/
+mobile/android/
+mobile/ios/
+*.log
+.env
+.env.*
+!.env.example
 .DS_Store

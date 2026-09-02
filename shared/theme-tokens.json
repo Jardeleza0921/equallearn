@@ -1,0 +1,6 @@
+{
+  "default": {"name":"EqualLearn Default","primary":"#177245","accent":"#2f9e65","background":"#f6f9f7","surface":"#ffffff","text":"#17352a"},
+  "ptc": {"name":"PTC Dark Green","primary":"#48d68b","accent":"#98efbd","background":"#07150f","surface":"#0e2419","text":"#f4fff8"},
+  "purple": {"name":"Purple","primary":"#7c3aed","accent":"#a78bfa","background":"#f7f3ff","surface":"#ffffff","text":"#302047"},
+  "pink": {"name":"Pink","primary":"#c93b73","accent":"#ef8eb4","background":"#fff6f9","surface":"#ffffff","text":"#4b2435"}
+}

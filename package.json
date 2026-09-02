@@ -1,21 +1,14 @@
 {
   "name": "equallearn",
   "private": true,
-  "version": "1.0.0",
-  "description": "EqualLearn responsive website and Android app",
+  "version": "2.0.0-phase1.2",
+  "workspaces": [
+    "web",
+    "mobile"
+  ],
   "scripts": {
-    "mobile:build-web": "node scripts/build-mobile.mjs",
-    "mobile:add-android": "npm run mobile:build-web && npx cap add android",
-    "mobile:sync": "npm run mobile:build-web && npx cap sync android",
-    "mobile:assets": "npx @capacitor/assets generate --android --assetPath resources --iconBackgroundColor '#111827' --iconBackgroundColorDark '#0b1020' --splashBackgroundColor '#111827' --splashBackgroundColorDark '#0b1020'",
-    "mobile:open": "npm run mobile:sync && npx cap open android"
-  },
-  "dependencies": {
-    "@capacitor/android": "8.5.0",
-    "@capacitor/core": "8.5.0"
-  },
-  "devDependencies": {
-    "@capacitor/cli": "8.5.0",
-    "@capacitor/assets": "3.0.5"
+    "web:dev": "npm --workspace web run dev",
+    "web:build": "npm --workspace web run build",
+    "mobile:start": "npm --workspace mobile run start"
   }
 }
