@@ -3,7 +3,7 @@
   "appName": "EqualLearn",
   "webDir": "www",
   "server": {
-    "url": "https://jardeleza0921.github.io/equallearn/",
+    "url": "https://equallearn-report.netlify.app/",
     "cleartext": false,
     "androidScheme": "https"
   },
