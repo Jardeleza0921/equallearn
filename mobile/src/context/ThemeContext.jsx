@@ -1,4 +1,5 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const palettes = {
   default: { id:'default', name:'Soft Green', bg:'#e8efe9', surface:'#f3f6f2', surface2:'#dce8df', text:'#20332a', muted:'#687970', primary:'#397b5c', accent:'#65a17f', soft:'#d6e7dc', line:'#cad8cf' },
@@ -7,5 +8,11 @@ export const palettes = {
   pink: { id:'pink', name:'Soft Pink', bg:'#f1e8eb', surface:'#f8f2f4', surface2:'#eadbe0', text:'#45343b', muted:'#7d6d73', primary:'#aa6079', accent:'#ca8ca1', soft:'#ead8de', line:'#dac8ce' },
 };
 const ThemeContext=createContext(null);
-export function ThemeProvider({children}){const [id,setTheme]=useState('default');const value=useMemo(()=>({theme:palettes[id],id,setTheme,palettes}),[id]);return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>}
+export function ThemeProvider({children}){
+  const[id,setId]=useState('default');
+  useEffect(()=>{AsyncStorage.getItem('equallearn-theme').then(saved=>{if(saved&&palettes[saved])setId(saved)}).catch(()=>{})},[]);
+  const setTheme=next=>{if(!palettes[next])return;setId(next);AsyncStorage.setItem('equallearn-theme',next).catch(()=>{});};
+  const value=useMemo(()=>({theme:palettes[id],id,setTheme,palettes}),[id]);
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+}
 export const useTheme=()=>useContext(ThemeContext);

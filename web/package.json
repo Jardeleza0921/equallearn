@@ -1,7 +1,7 @@
 {
   "name": "equallearn-web",
   "private": true,
-  "version": "2.0.0-phase1.2",
+  "version": "4.0.0-phase4",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
@@ -12,7 +12,9 @@
     "lucide-react": "^1.37.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-router-dom": "^7.18.0"
+    "react-router-dom": "^7.18.0",
+    "firebase": "12.17.0",
+    "appwrite": "26.2.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "latest",

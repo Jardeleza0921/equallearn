@@ -2,14 +2,29 @@
   "expo": {
     "name": "EqualLearn",
     "slug": "equallearn",
-    "version": "2.0.0",
+    "version": "3.0.0",
     "orientation": "portrait",
     "scheme": "equallearn",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
-    "splash": {"image": "./assets/splash.png", "resizeMode": "contain", "backgroundColor": "#f6f9f7"},
-    "android": {"package": "com.equallearn.app", "adaptiveIcon": {"foregroundImage": "./assets/icon.png", "backgroundColor": "#f6f9f7"}},
-    "plugins": ["expo-router"],
-    "experiments": {"typedRoutes": false}
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f6f9f7"
+    },
+    "android": {
+      "package": "com.equallearn.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#f6f9f7"
+      }
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": false,
+      "autolinkingModuleResolution": true
+    }
   }
 }

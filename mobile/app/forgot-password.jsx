@@ -1,0 +1,5 @@
+import { useState } from 'react';
+import { router } from 'expo-router';
+import { ActionButton, Header, Input, Notice, Panel, Screen } from '../src/components/FunctionalUI';
+import { useAuth } from '../src/context/AuthContext';
+export default function ForgotPassword(){const{resetPassword}=useAuth();const[email,setEmail]=useState(''),[message,setMessage]=useState('');async function send(){try{if(!email.trim())throw new Error('Enter your email address.');await resetPassword(email);setMessage('Password reset email sent.');}catch(e){setMessage(e.message||'Unable to send reset email.');}}return <Screen><Header eyebrow="Account recovery" title="Reset password" text="Firebase will send a password reset link to your registered email."/><Panel><Input label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none"/><Notice type={message.includes('sent')?'success':'error'}>{message}</Notice><ActionButton onPress={send}>Send reset email</ActionButton><ActionButton variant="secondary" style={{marginTop:8}} onPress={()=>router.back()}>Back to sign in</ActionButton></Panel></Screen>}

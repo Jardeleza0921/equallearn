@@ -8,3 +8,6 @@ mobile/ios/
 .env.*
 !.env.example
 .DS_Store
+
+# Expo generated export
+mobile/dist/
