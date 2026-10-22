@@ -13,6 +13,7 @@ import { recentActivity, studentModules } from './data/mockData';
 import { roleHome, useAuth } from './context/AuthContext';
 import { useDesign } from './context/DesignContext';
 import ProfileAvatar from './components/ProfileAvatar';
+import { CourseField, NameFields } from './components/NameFields';
 import * as Live from './pages/FunctionalPages';
 
 function PublicHeader(){return <header className="public-nav"><Link to="/"><Logo/></Link><nav><Link to="/features">Features</Link><Link to="/mobile">Mobile</Link><Link to="/about">About</Link><Link to="/developers">Developers</Link></nav><div className="public-actions"><ThemePicker compact/><Link className="btn ghost" to="/login">Login</Link></div></header>}
@@ -33,9 +34,79 @@ function AuthGate({role,children}){const {firebaseUser,profile,loading}=useAuth(
 
 function PasswordInput(props){const [show,setShow]=useState(false);return <div className="password-input"><input {...props} type={show?'text':'password'}/><button type="button" className="password-toggle" onClick={()=>setShow(v=>!v)} aria-label={show?'Hide password':'Show password'}>{show?<EyeOff size={16}/>:<Eye size={16}/>}<span>{show?'Hide':'Show'}</span></button></div>}
 
-function Login(){const {login,resetPassword,firebaseUser,profile}=useAuth();const navigate=useNavigate();const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState('');if(firebaseUser&&profile)return <Navigate to={roleHome((profile.role||'student').toLowerCase())} replace/>;async function submit(e){e.preventDefault();setBusy(true);setMessage('');try{const p=await login(email,password);navigate(roleHome((p.role||'student').toLowerCase()),{replace:true})}catch(err){setMessage(err.message||'Unable to sign in.')}finally{setBusy(false)}}async function forgot(){if(!email){setMessage('Enter your email first, then choose Reset password.');return}try{await resetPassword(email);setMessage('Password reset email sent.')}catch(err){setMessage(err.message||'Unable to send reset email.')}}return <div className="auth-page"><div className="auth-brand"><Logo/><span className="eyebrow">EqualLearn</span><h1>Welcome back.</h1><p>Sign in with the same Firebase account you already use in EqualLearn.</p><div className="auth-art"><GraduationCap/><div><strong>Learn. Understand. Create equality.</strong><span>Same accounts. New frontend.</span></div></div></div><form className="auth-card" onSubmit={submit}><h2>Sign in</h2><p className="muted">Connected to the existing Firebase Authentication + users collection.</p><label>Email<input value={email} onChange={e=>setEmail(e.target.value)} type="email" autoComplete="email" placeholder="you@example.com" required/></label><label>Password<PasswordInput value={password} onChange={e=>setPassword(e.target.value)} autoComplete="current-password" placeholder="••••••••" required/></label>{message&&<p className="form-message">{message}</p>}<button className="btn primary full" disabled={busy}>{busy?'Signing in…':'Continue'}</button><button type="button" className="btn ghost full" onClick={forgot}>Reset password</button><div className="demo-divider"><span>New student?</span></div><Link className="btn ghost full" to="/register">Create student account</Link><Link className="back-link" to="/">← Back to EqualLearn</Link></form></div>}
+function resetErrorMessage(error){const code=error?.code||'';if(code==='auth/invalid-email')return 'That email address is not formatted correctly.';if(code==='auth/user-not-found')return 'No EqualLearn account uses that email address.';if(code==='auth/too-many-requests')return 'Too many reset attempts. Wait a few minutes, then try again.';if(code==='auth/network-request-failed')return 'Network problem. Check your connection and try again.';return error?.message||'Unable to send the reset email.'}
 
-function Register(){const {registerStudent}=useAuth();const navigate=useNavigate();const [form,setForm]=useState({fullname:'',studentNumber:'',email:'',course:'BSIT',yearLevel:'',section:'',password:''});const [busy,setBusy]=useState(false),[message,setMessage]=useState('');const set=(k,v)=>setForm(x=>({...x,[k]:v}));const setSection=v=>set('section',v.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3));async function submit(e){e.preventDefault();setBusy(true);setMessage('');try{await registerStudent(form);navigate('/student',{replace:true})}catch(err){setMessage(err.message||'Unable to create account.')}finally{setBusy(false)}}return <div className="auth-page"><div className="auth-brand"><Logo/><span className="eyebrow">Student registration</span><h1>Join EqualLearn.</h1><p>Create your student account with a clear course, year level, and section profile.</p></div><form className="auth-card" onSubmit={submit}><h2>Create student account</h2><label>Full name<input value={form.fullname} onChange={e=>set('fullname',e.target.value)} required/></label><label>Student ID<input value={form.studentNumber} onChange={e=>set('studentNumber',e.target.value)} placeholder="23BSIT-0601" required/></label><label>Email<input type="email" value={form.email} onChange={e=>set('email',e.target.value)} required/></label><label>Course<input value="BSIT" readOnly/></label><label>Year level<select value={form.yearLevel} onChange={e=>set('yearLevel',e.target.value)} required><option value="">Select year</option><option value="1st">1st</option><option value="2nd">2nd</option><option value="3rd">3rd</option><option value="4th">4th</option></select></label><label>Section<input value={form.section} onChange={e=>setSection(e.target.value)} maxLength="3" placeholder="A, 3A, 3A1" pattern="[A-Za-z0-9]{1,3}" title="Use 1 to 3 letters or numbers" required/></label><label>Password<PasswordInput minLength="6" value={form.password} onChange={e=>set('password',e.target.value)} autoComplete="new-password" required/></label>{message&&<p className="form-message">{message}</p>}<button className="btn primary full" disabled={busy}>{busy?'Creating…':'Create account'}</button><Link className="back-link" to="/login">← Back to sign in</Link></form></div>}
+function ForgotPassword({initialEmail,onBack,resetPassword}){
+  const [email,setEmail]=useState(initialEmail||''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[sentTo,setSentTo]=useState('');
+  async function submit(e){
+    e.preventDefault();
+    const target=email.trim().toLowerCase();
+    setError('');
+    if(!target){setError('Enter the email address on your EqualLearn account.');return}
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(target)){setError('Enter a valid email address, for example name@school.edu.ph.');return}
+    setBusy(true);
+    try{await resetPassword(target);setSentTo(target)}
+    catch(err){setError(resetErrorMessage(err))}
+    finally{setBusy(false)}
+  }
+  if(sentTo)return <div className="auth-card forgot-card">
+    <span className="eyebrow">Account recovery</span>
+    <h2>Check your email.</h2>
+    <p className="muted">We sent a password reset link to <strong>{sentTo}</strong>. Open that message and follow the link to choose a new password.</p>
+    <ul className="forgot-tips"><li>The link expires about an hour after it is sent.</li><li>Nothing yet? Check your spam folder, or send another link.</li></ul>
+    <button type="button" className="btn primary full" onClick={()=>{setSentTo('');setError('')}}>Send another link</button>
+    <button type="button" className="btn ghost full" onClick={onBack}>Back to sign in</button>
+  </div>;
+  return <form className="auth-card forgot-card" onSubmit={submit}>
+    <span className="eyebrow">Account recovery</span>
+    <h2>Forgot password?</h2>
+    <p className="muted">Enter the email address linked to your EqualLearn account. We will send a secure link to choose a new password.</p>
+    <label>Email<input value={email} onChange={e=>{setEmail(e.target.value);if(error)setError('')}} type="email" autoComplete="email" inputMode="email" placeholder="you@example.com"/></label>
+    {error&&<p className="form-message error">{error}</p>}
+    <button className="btn primary full" disabled={busy}>{busy?'Sending link…':'Send reset link'}</button>
+    <button type="button" className="btn ghost full" onClick={onBack}>Back to sign in</button>
+  </form>;
+}
+
+function Login(){
+  const {login,resetPassword,firebaseUser,profile}=useAuth();
+  const navigate=useNavigate();
+  const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[forgot,setForgot]=useState(false);
+  if(firebaseUser&&profile)return <Navigate to={roleHome((profile.role||'student').toLowerCase())} replace/>;
+  async function submit(e){e.preventDefault();setBusy(true);setMessage('');try{const p=await login(email,password);navigate(roleHome((p.role||'student').toLowerCase()),{replace:true})}catch(err){setMessage(err.message||'Unable to sign in.')}finally{setBusy(false)}}
+  return <div className="auth-page">
+    <div className="auth-brand"><Logo/><span className="eyebrow">EqualLearn</span><h1>Welcome back.</h1><p>Sign in with the same Firebase account you already use in EqualLearn.</p><div className="auth-art"><GraduationCap/><div><strong>Learn. Understand. Create equality.</strong><span>Same accounts. New frontend.</span></div></div></div>
+    {forgot
+      ? <ForgotPassword initialEmail={email} resetPassword={resetPassword} onBack={()=>setForgot(false)}/>
+      : <form className="auth-card" onSubmit={submit}><h2>Sign in</h2><p className="muted">Connected to the existing Firebase Authentication + users collection.</p><label>Email<input value={email} onChange={e=>setEmail(e.target.value)} type="email" autoComplete="email" placeholder="you@example.com" required/></label><label>Password<PasswordInput value={password} onChange={e=>setPassword(e.target.value)} autoComplete="current-password" placeholder="••••••••" required/></label><div className="auth-inline"><button type="button" className="link-button" onClick={()=>{setMessage('');setForgot(true)}}>Forgot password?</button></div>{message&&<p className="form-message error">{message}</p>}<button className="btn primary full" disabled={busy}>{busy?'Signing in…':'Continue'}</button><div className="demo-divider"><span>New student?</span></div><Link className="btn ghost full" to="/register">Create student account</Link><Link className="back-link" to="/">← Back to EqualLearn</Link></form>}
+  </div>;
+}
+
+function Register(){
+  const {registerStudent}=useAuth();
+  const navigate=useNavigate();
+  const [form,setForm]=useState({firstName:'',middleInitial:'',lastName:'',studentNumber:'',email:'',course:'BSIT',yearLevel:'',section:'',password:''});
+  const [busy,setBusy]=useState(false),[message,setMessage]=useState('');
+  const set=(k,v)=>setForm(x=>({...x,[k]:v}));
+  const setName=v=>setForm(x=>({...x,...v}));
+  const setSection=v=>set('section',v.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3));
+  async function submit(e){e.preventDefault();setBusy(true);setMessage('');try{await registerStudent(form);navigate('/student',{replace:true})}catch(err){setMessage(err.message||'Unable to create account.')}finally{setBusy(false)}}
+  return <div className="auth-page">
+    <div className="auth-brand"><Logo/><span className="eyebrow">Student registration</span><h1>Join EqualLearn.</h1><p>Create your student account with your name, course, year level, and section.</p></div>
+    <form className="auth-card" onSubmit={submit}><h2>Create student account</h2>
+      <NameFields value={form} onChange={setName} required idPrefix="register"/>
+      <label>Student ID<input value={form.studentNumber} onChange={e=>set('studentNumber',e.target.value)} placeholder="23BSIT-0601" required/></label>
+      <label>Email<input type="email" value={form.email} onChange={e=>set('email',e.target.value)} required/></label>
+      <CourseField value={form.course} onChange={v=>set('course',v)} required hint="Type your program code or choose a suggestion."/>
+      <label>Year level<select value={form.yearLevel} onChange={e=>set('yearLevel',e.target.value)} required><option value="">Select year</option><option value="1st">1st</option><option value="2nd">2nd</option><option value="3rd">3rd</option><option value="4th">4th</option></select></label>
+      <label>Section<input value={form.section} onChange={e=>setSection(e.target.value)} maxLength="3" placeholder="A, 3A, 3A1" pattern="[A-Za-z0-9]{1,3}" title="Use 1 to 3 letters or numbers" required/></label>
+      <label>Password<PasswordInput minLength="6" value={form.password} onChange={e=>set('password',e.target.value)} autoComplete="new-password" required/></label>
+      {message&&<p className="form-message error">{message}</p>}
+      <button className="btn primary full" disabled={busy}>{busy?'Creating…':'Create account'}</button>
+      <Link className="back-link" to="/login">← Back to sign in</Link>
+    </form>
+  </div>;
+}
 
 function Stat({icon:Icon,label,value='—',note}){return <article className="stat-card"><span><Icon size={18}/></span><div><small>{label}</small><strong>{value}</strong><p>{note}</p></div></article>}
 function PageTitle({eyebrow,title,text,action,icon:Icon=Plus}){return <div className="page-title"><div><span className="eyebrow">{eyebrow}</span><h1>{title}</h1><p>{text}</p></div>{action&&<button className="btn primary"><Icon size={16}/>{action}</button>}</div>}

@@ -24,7 +24,39 @@ export const normalizeYearLevel = value => {
 };
 export const normalizeSection = value => clean(value).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3);
 export const studentSection = student => normalizeSection(student?.section || student?.cohort || student?.cohortId);
-export const studentCourse = student => clean(student?.course).toUpperCase() || 'BSIT';
+export const DEFAULT_COURSE = 'BSIT';
+export const COURSE_SUGGESTIONS = [DEFAULT_COURSE];
+export const normalizeCourse = value => clean(value).toUpperCase().replace(/[^A-Z0-9 -]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16);
+export const studentCourse = student => normalizeCourse(student?.course) || DEFAULT_COURSE;
+export const normalizePersonName = value => clean(value).replace(/\s+/g, ' ').slice(0, 60);
+export const normalizeMiddleInitial = value => clean(value).replace(/[^A-Za-z]/g, '').slice(0, 1).toUpperCase();
+export const fullNameFromParts = parts => {
+  const first = normalizePersonName(parts?.firstName);
+  const middle = normalizeMiddleInitial(parts?.middleInitial);
+  const last = normalizePersonName(parts?.lastName);
+  return [first, middle ? `${middle}.` : '', last].filter(Boolean).join(' ');
+};
+const NAME_PARTICLES = ['de', 'del', 'dela', 'de la', 'las', 'los', 'la', 'san', 'santa', 'santo', 'sta', 'sto', 'van', 'von', 'der', 'dos', 'da', 'di', 'du', 'le'];
+export const splitFullName = value => {
+  const parts = clean(value).split(/\s+/).filter(Boolean);
+  if (!parts.length) return { firstName: '', middleInitial: '', lastName: '' };
+  if (parts.length === 1) return { firstName: parts[0], middleInitial: '', lastName: '' };
+  const middleIndex = parts.length - 2;
+  if (parts.length >= 3 && /^[A-Za-z]\.?$/.test(parts[middleIndex])) {
+    return { firstName: parts.slice(0, middleIndex).join(' '), middleInitial: parts[middleIndex].charAt(0).toUpperCase(), lastName: parts[parts.length - 1] };
+  }
+  if (parts.length >= 3 && NAME_PARTICLES.includes(lower(parts[middleIndex]))) {
+    return { firstName: parts.slice(0, middleIndex).join(' '), middleInitial: '', lastName: parts.slice(middleIndex).join(' ') };
+  }
+  return { firstName: parts.slice(0, -1).join(' '), middleInitial: '', lastName: parts[parts.length - 1] };
+};
+export const nameParts = person => {
+  const first = normalizePersonName(person?.firstName);
+  const last = normalizePersonName(person?.lastName);
+  if (first || last) return { firstName: first, middleInitial: normalizeMiddleInitial(person?.middleInitial), lastName: last };
+  return splitFullName(person?.fullname || person?.name || '');
+};
+export const personName = person => fullNameFromParts(nameParts(person)) || clean(person?.fullname) || clean(person?.email);
 export const timestampMs = value => {
   if (!value) return 0;
   if (typeof value.toMillis === 'function') return value.toMillis();
@@ -161,7 +193,7 @@ export async function deleteStudentProfile(id) {
 }
 
 
-export async function createTeacherAccount({ fullname, email, password, department = '', phone = '', bio = '', status = 'active' }) {
+export async function createTeacherAccount({ firstName = '', middleInitial = '', lastName = '', fullname, email, password, department = '', phone = '', bio = '', status = 'active' }) {
   const normalizedEmail = lower(email);
   const users = await getUsers();
   if (users.some(u => lower(u.email) === normalizedEmail)) throw new Error('This email is already registered.');
@@ -171,7 +203,8 @@ export async function createTeacherAccount({ fullname, email, password, departme
     const credential = await createUserWithEmailAndPassword(secondaryAuth, normalizedEmail, password);
     const uid = credential.user.uid;
     await setDoc(doc(db, COLLECTIONS.users, uid), {
-      uid, fullname: clean(fullname), email: normalizedEmail, department: clean(department), phone: clean(phone), bio: clean(bio), role: 'teacher', status,
+      uid, firstName: normalizePersonName(firstName), middleInitial: normalizeMiddleInitial(middleInitial), lastName: normalizePersonName(lastName),
+      fullname: clean(fullname), email: normalizedEmail, department: clean(department), phone: clean(phone), bio: clean(bio), role: 'teacher', status,
       course: '', yearLevel: '', studentNumber: '', profileImage: '', createdAt: serverTimestamp(), lastLogin: null,
     });
     await signOut(secondaryAuth);

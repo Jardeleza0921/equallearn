@@ -267,3 +267,19 @@
 @media(max-width:720px){.profile-view-identity{align-items:flex-start}.profile-view-facts,.profile-view.compact .profile-view-facts{grid-template-columns:1fr 1fr}.profile-view-actions{justify-content:stretch}.profile-view-actions .btn{flex:1}.profile-edit-panel .section-row{align-items:flex-start}.profile-edit-panel .section-row small{text-align:left}.refined-profile-summary>.profile-avatar-wrap{align-items:center}}
 @media(max-width:480px){.profile-view-facts{grid-template-columns:1fr}}
 .status-pill.deleted{background:color-mix(in srgb,#6f6671 12%,var(--surface));color:#6f6671}
+
+/* Split person name fields */
+.name-grid{display:grid;grid-template-columns:minmax(0,1fr) 92px minmax(0,1fr);gap:10px;align-items:end;margin:14px 0}
+.name-grid>label{margin:0}
+.name-grid input{min-width:0}
+.auth-card .name-grid{margin:18px 0}
+@media(max-width:520px){.name-grid{grid-template-columns:minmax(0,1fr) 74px minmax(0,1fr);gap:8px}.name-grid .field>span{font-size:10px}}
+
+/* Forgot password */
+.auth-inline{display:flex;justify-content:flex-end;margin:-4px 0 12px}
+.link-button{padding:2px 0;border:0;background:none;color:var(--primary);font:800 11px 'Manrope',sans-serif;cursor:pointer}
+.link-button:hover{text-decoration:underline}
+.forgot-card h2{margin:14px 0 10px}
+.forgot-card>p.muted{font-size:13px;line-height:1.65;margin:0 0 6px}
+.forgot-card .btn.full{margin-top:8px}
+.forgot-tips{margin:4px 0 16px;padding-left:18px;color:var(--muted);font-size:12px;line-height:1.7}

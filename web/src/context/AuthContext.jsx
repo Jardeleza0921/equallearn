@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { createUserWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
+import { fullNameFromParts, normalizeCourse, normalizeMiddleInitial, normalizePersonName } from '../lib/data';
 
 const AuthContext = createContext(null);
 
@@ -48,8 +49,14 @@ export function AuthProvider({ children }) {
   async function registerStudent(form) {
     const email = form.email.trim().toLowerCase();
     const studentNumber = form.studentNumber.trim().toUpperCase();
-    const fullname = form.fullname.trim();
-    const course = 'BSIT';
+    const firstName = normalizePersonName(form.firstName);
+    const middleInitial = normalizeMiddleInitial(form.middleInitial);
+    const lastName = normalizePersonName(form.lastName);
+    if (!firstName) throw new Error('Enter your first name.');
+    if (!lastName) throw new Error('Enter your last name.');
+    const fullname = fullNameFromParts({ firstName, middleInitial, lastName });
+    const course = normalizeCourse(form.course);
+    if (!course) throw new Error('Enter your course, for example BSIT.');
     const yearLevel = String(form.yearLevel || '').trim();
     const section = String(form.section || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3);
     const validYears = ['1st', '2nd', '3rd', '4th'];
@@ -72,7 +79,7 @@ export function AuthProvider({ children }) {
         status: 'active', updatedAt: serverTimestamp(), ...(groupSnap.exists() ? {} : { createdAt: serverTimestamp() })
       }, { merge: true });
       await setDoc(doc(db, 'users', uid), {
-        uid, fullname, studentNumber, email, yearLevel, course, section, classGroupId,
+        uid, firstName, middleInitial, lastName, fullname, studentNumber, email, yearLevel, course, section, classGroupId,
         role: 'student', status: 'active', profileImage: '', department: '',
         createdAt: serverTimestamp(), lastLogin: serverTimestamp(),
       });
