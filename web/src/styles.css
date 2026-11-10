@@ -283,3 +283,19 @@
 .forgot-card>p.muted{font-size:13px;line-height:1.65;margin:0 0 6px}
 .forgot-card .btn.full{margin-top:8px}
 .forgot-tips{margin:4px 0 16px;padding-left:18px;color:var(--muted);font-size:12px;line-height:1.7}
+
+/* --- Google sign-in and account recovery --- */
+.google-btn{display:flex;align-items:center;justify-content:center;gap:10px}
+.google-mark{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid rgba(0,0,0,.15);color:#4285f4;font-size:13px;font-weight:700;line-height:1}
+.google-account{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid rgba(23,114,69,.25);background:rgba(23,114,69,.08)}
+.google-account>div{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.google-account small{opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.form-message.success{border-color:rgba(23,114,69,.35);background:rgba(23,114,69,.1)}
+.small{font-size:12px}
+
+/* Quiz settings + timed quiz additions */
+.quiz-meta{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem}
+.quiz-meta .progress{flex:1 1 160px}
+.check-row{display:flex;align-items:center;gap:.55rem;font-weight:600;margin:.4rem 0;cursor:pointer}
+.check-row input{width:auto;accent-color:#2563eb}
+.danger-chip{background:#fee2e2;color:#b91c1c}

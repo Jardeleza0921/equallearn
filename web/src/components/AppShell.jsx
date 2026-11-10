@@ -16,7 +16,7 @@ const navByRole = {
   ],
   teacher: [
     ['Dashboard', Home, ''], ['Learning Content', BookOpen, 'learning-content'], ['Students', Users, 'students'],
-    ['Quiz Builder', ClipboardCheck, 'quizzes'], ['Analytics', BarChart3, 'analytics'], ['Profile', UserRound, 'profile'],
+    ['Quiz Builder', ClipboardCheck, 'quizzes'], ['Deadlines', Bell, 'deadlines'], ['Analytics', BarChart3, 'analytics'], ['Profile', UserRound, 'profile'],
     ['Settings', Settings, 'settings'],
   ],
   admin: [

@@ -12,6 +12,7 @@ import {
 
 import {
     createUserWithEmailAndPassword,
+    deleteUser,
     signInWithEmailAndPassword,
     signOut,
     sendPasswordResetEmail,
@@ -40,10 +41,60 @@ import {
 
 
 // ======================================================
+// REGISTRATION ERROR MESSAGES
+// ======================================================
+
+function registerErrorMessage(error) {
+
+    const code = error?.code || "";
+
+    if (code === "auth/email-already-in-use") {
+        return "This email is already registered. Sign in instead, or register with a different email address.";
+    }
+    if (code === "auth/invalid-email") {
+        return "Enter a valid email address, for example name@school.edu.ph.";
+    }
+    if (code === "auth/weak-password") {
+        return "Choose a password with at least 6 characters.";
+    }
+    if (code === "auth/operation-not-allowed") {
+        return "Email and password registration is not enabled for this Firebase project.";
+    }
+    if (code === "auth/too-many-requests") {
+        return "Too many attempts. Wait a few minutes, then try again.";
+    }
+    if (code === "auth/network-request-failed") {
+        return "Network problem. Check your connection and try again.";
+    }
+
+    return error?.message || "Unable to create the account.";
+
+}
+
+
+function profileSaveReason(error) {
+
+    const code = error?.code || "";
+
+    if (code === "permission-denied") {
+        return "The database rejected the profile save (missing or insufficient permissions).";
+    }
+    if (code === "unavailable") {
+        return "The database was unreachable.";
+    }
+
+    return "The profile could not be saved.";
+
+}
+
+
+// ======================================================
 // STUDENT REGISTER
 // ======================================================
 
 export async function registerUser(userData) {
+
+    let credential = null;
 
     try {
 
@@ -51,33 +102,15 @@ export async function registerUser(userData) {
         // CLEAN DATA
         // --------------------------------------------------
 
-        const email =
-            userData.email
-                .trim()
-                .toLowerCase();
+        const email = userData.email.trim().toLowerCase();
 
+        const studentNumber = userData.studentNumber.trim().toUpperCase();
 
-        const studentNumber =
-            userData.studentNumber
-                .trim()
-                .toUpperCase();
+        const fullname = userData.fullname.trim();
 
+        const course = userData.course.trim().toUpperCase();
 
-        const fullname =
-            userData.fullname
-                .trim();
-
-
-        const course =
-            userData.course
-                .trim()
-                .toUpperCase();
-
-
-        const yearLevel =
-            userData.yearLevel
-                .trim()
-                .toUpperCase();
+        const yearLevel = userData.yearLevel.trim();
 
 
         // ==================================================
@@ -87,68 +120,45 @@ export async function registerUser(userData) {
         // 24BSIT-0601 → 24
         // ==================================================
 
-        const cohort =
-            studentNumber.substring(0, 2);
+        const cohort = studentNumber.substring(0, 2);
 
 
         // ==================================================
-        // CHECK IF STUDENT ID ALREADY EXISTS
+        // CREATE FIREBASE AUTH ACCOUNT FIRST
+        //
+        // The account has to exist before Firestore is
+        // touched. Reading the users collection while signed
+        // out is rejected with "Missing or insufficient
+        // permissions".
+        //
+        // Firebase Authentication keeps emails unique. Student
+        // numbers are NOT checked for duplicates, and no name,
+        // course, year level, or section is compared with other
+        // students.
         // ==================================================
 
-        const usersRef =
-            collection(
-                db,
-                "users"
-            );
+        try {
 
-
-        const studentQuery =
-            query(
-                usersRef,
-                where(
-                    "studentNumber",
-                    "==",
-                    studentNumber
-                )
-            );
-
-
-        const studentSnapshot =
-            await getDocs(
-                studentQuery
-            );
-
-
-        if (
-            !studentSnapshot.empty
-        ) {
-
-            return {
-
-                success: false,
-
-                message:
-                    "Student ID is already registered."
-
-            };
-
-        }
-
-
-        // ==================================================
-        // CREATE FIREBASE AUTH ACCOUNT
-        // ==================================================
-
-        const credential =
-            await createUserWithEmailAndPassword(
+            credential = await createUserWithEmailAndPassword(
                 auth,
                 email,
                 userData.password
             );
 
+        }
 
-        const uid =
-            credential.user.uid;
+        catch (error) {
+
+            return {
+                success: false,
+                code: error.code || "",
+                message: registerErrorMessage(error)
+            };
+
+        }
+
+
+        const uid = credential.user.uid;
 
 
         // ==================================================
@@ -165,160 +175,125 @@ export async function registerUser(userData) {
         // all become:
         //
         // 23_BSIT_A
+        //
+        // This is optional bookkeeping, so a failure here must
+        // not stop the student profile from being saved.
         // ==================================================
 
-        const classGroupsRef =
-            collection(
-                db,
-                "classGroups"
-            );
+        let classGroupId = `${cohort}_${course}_A`;
 
+        try {
 
-        const classGroupQuery =
-            query(
+            const classGroupsRef = collection(db, "classGroups");
+
+            const classGroupQuery = query(
                 classGroupsRef,
-
-                where(
-                    "cohort",
-                    "==",
-                    cohort
-                ),
-
-                where(
-                    "course",
-                    "==",
-                    course
-                )
+                where("cohort", "==", cohort),
+                where("course", "==", course)
             );
 
+            const classGroupSnapshot = await getDocs(classGroupQuery);
 
-        const classGroupSnapshot =
-            await getDocs(
-                classGroupQuery
-            );
+            if (!classGroupSnapshot.empty) {
 
+                classGroupId = classGroupSnapshot.docs[0].id;
 
-        let classGroupId;
+            }
 
+            else {
 
-        // ==================================================
-        // EXISTING CLASS GROUP
-        // ==================================================
+                await setDoc(
+                    doc(db, "classGroups", classGroupId),
+                    {
+                        cohort: cohort,
+                        course: course,
+                        section: "A",
+                        name: `${cohort}${course}-A`,
+                        status: "active",
+                        createdAt: serverTimestamp()
+                    }
+                );
 
-        if (
-            !classGroupSnapshot.empty
-        ) {
-
-            classGroupId =
-                classGroupSnapshot.docs[0].id;
+            }
 
         }
 
+        catch (error) {
 
-        // ==================================================
-        // CREATE NEW CLASS GROUP
-        // ==================================================
-
-        else {
-
-            classGroupId =
-                `${cohort}_${course}_A`;
-
-
-            await setDoc(
-
-                doc(
-                    db,
-                    "classGroups",
-                    classGroupId
-                ),
-
-                {
-
-                    cohort:
-                        cohort,
-
-                    course:
-                        course,
-
-                    section:
-                        "A",
-
-                    name:
-                        `${cohort}${course}-A`,
-
-                    status:
-                        "active",
-
-                    createdAt:
-                        serverTimestamp()
-
-                }
-
-            );
+            console.warn("Class group update skipped:", error);
 
         }
 
 
         // ==================================================
         // CREATE STUDENT FIRESTORE PROFILE
+        //
+        // The document id is the new Firebase Authentication
+        // uid, so the profile always belongs to this account.
         // ==================================================
 
-        await setDoc(
+        try {
 
-            doc(
-                db,
-                "users",
-                uid
-            ),
+            await setDoc(
+                doc(db, "users", uid),
+                {
+                    uid: uid,
+                    fullname: fullname,
+                    studentNumber: studentNumber,
+                    email: email,
+                    yearLevel: yearLevel,
+                    course: course,
+                    cohort: cohort,
+                    classGroupId: classGroupId,
+                    role: "student",
+                    status: "active",
+                    profileImage: "",
+                    department: "",
+                    createdAt: serverTimestamp(),
+                    lastLogin: serverTimestamp()
+                }
+            );
 
-            {
+        }
 
-                uid:
-                    uid,
+        catch (error) {
 
-                fullname:
-                    fullname,
+            console.error("PROFILE SAVE ERROR:", error);
 
-                studentNumber:
-                    studentNumber,
+            const reason = profileSaveReason(error);
 
-                email:
-                    email,
+            let rolledBack = false;
 
-                yearLevel:
-                    yearLevel,
+            try {
 
-                course:
-                    course,
+                // Remove the just-created sign-in account so the
+                // email is not left unusable and no half-created
+                // account remains.
+                await deleteUser(credential.user);
 
-                cohort:
-                    cohort,
-
-                classGroupId:
-                    classGroupId,
-
-                role:
-                    "student",
-
-                status:
-                    "active",
-
-                profileImage:
-                    "",
-
-                department:
-                    "",
-
-                createdAt:
-                    serverTimestamp(),
-
-                lastLogin:
-                    serverTimestamp()
+                rolledBack = true;
 
             }
 
-        );
+            catch (rollbackError) {
+
+                console.error("Registration rollback error:", rollbackError);
+
+                try { await signOut(auth); }
+
+                catch (signOutError) { console.error("Sign-out error:", signOutError); }
+
+            }
+
+            return {
+                success: false,
+                code: error.code || "",
+                message: rolledBack
+                    ? `We could not save your student profile, so the new sign-in account was removed. ${reason} Please try again.`
+                    : `Your sign-in account was created, but your student profile could not be saved. ${reason} Contact an administrator with your email address (${email}) before signing in again.`
+            };
+
+        }
 
 
         // ==================================================
@@ -326,35 +301,20 @@ export async function registerUser(userData) {
         // ==================================================
 
         return {
-
             success: true,
-
-            uid:
-                uid,
-
-            classGroupId:
-                classGroupId
-
+            uid: uid,
+            classGroupId: classGroupId
         };
 
     }
 
-
     catch (error) {
 
-        console.error(
-            "REGISTER ERROR:",
-            error
-        );
-
+        console.error("REGISTER ERROR:", error);
 
         return {
-
             success: false,
-
-            message:
-                error.message
-
+            message: error.message
         };
 
     }

@@ -209,11 +209,12 @@ form.addEventListener(
             // ==================================================
             // AUTH.JS HANDLES:
             //
-            // Firebase Authentication
-            // Student ID duplicate check
+            // Firebase Authentication (unique email)
             // Cohort
-            // Class Group
+            // Class Group (best effort)
             // Firestore student profile
+            //
+            // Student numbers are not checked for duplicates.
             // ==================================================
 
             const result =
@@ -289,19 +290,7 @@ form.addEventListener(
             ) {
 
                 errorMessage =
-                    "This email is already registered.";
-
-            }
-
-
-            if (
-                errorMessage.includes(
-                    "Student ID"
-                )
-            ) {
-
-                errorMessage =
-                    "This Student ID is already registered.";
+                    "This email is already registered. Sign in instead, or register with a different email address.";
 
             }
 

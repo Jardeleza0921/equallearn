@@ -1,13 +1,14 @@
 import { initializeApp, deleteApp } from 'firebase/app';
 import { createUserWithEmailAndPassword, getAuth, signOut } from 'firebase/auth';
 import {
-  addDoc, collection, deleteDoc, doc, getDoc, getDocs, limit, orderBy, query,
+  addDoc, collection, deleteDoc, doc, getDoc, getDocs, increment, limit, orderBy, query,
   serverTimestamp, setDoc, updateDoc, where
 } from 'firebase/firestore';
 import { db, firebaseConfig } from './firebase';
 
 export const COLLECTIONS = {
-  users: 'users', modules: 'modules', lessons: 'lessons', questions: 'questions', progress: 'progress',
+  users: 'users', modules: 'modules', lessons: 'lessons', questions: 'questions', quizzes: 'quizzes', progress: 'progress',
+  deadlines: 'deadlines', deadlineOverrides: 'deadlineOverrides',
   classGroups: 'classGroups', assignments: 'teacherAssignments', notifications: 'notifications',
 };
 
@@ -84,8 +85,13 @@ export const getModules = async () => (await list(COLLECTIONS.modules)).sort((a,
 export const getLessons = async () => (await list(COLLECTIONS.lessons)).sort((a,b)=>clean(a.moduleName).localeCompare(clean(b.moduleName)) || clean(a.title).localeCompare(clean(b.title)));
 export const getQuestions = async () => list(COLLECTIONS.questions);
 export const getProgress = async userId => {
-  const rows = await list(COLLECTIONS.progress);
-  return (userId ? rows.filter(row => row.userId === userId) : rows).sort((a,b)=>timestampMs(b.completedAt)-timestampMs(a.completedAt));
+  // Students may only read their own progress under the Firebase rules, so the
+  // filter has to run in the query instead of on the client.
+  const snap = userId
+    ? await getDocs(query(collection(db, COLLECTIONS.progress), where('userId', '==', userId)))
+    : await getDocs(collection(db, COLLECTIONS.progress));
+  const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return rows.sort((a,b)=>timestampMs(b.completedAt)-timestampMs(a.completedAt));
 };
 export const getClassGroups = async () => {
   const [students, stored] = await Promise.all([getUsers('student'), list(COLLECTIONS.classGroups)]);
@@ -107,9 +113,12 @@ export const getClassGroups = async () => {
 };
 export const getAssignments = async () => (await list(COLLECTIONS.assignments)).sort((a,b)=>clean(a.className).localeCompare(clean(b.className)) || clean(a.yearLevel).localeCompare(clean(b.yearLevel)));
 export const getNotifications = async uid => {
-  // Intentionally filter client-side to preserve the old branch behavior without requiring a new composite index.
-  const rows = await list(COLLECTIONS.notifications);
-  return rows.filter(row => row.userId === uid).sort((a,b)=>timestampMs(b.createdAt)-timestampMs(a.createdAt)).slice(0,20);
+  if (!uid) return [];
+  // Single equality filter: no composite index needed, and it matches the
+  // "own notifications only" rule.
+  const snap = await getDocs(query(collection(db, COLLECTIONS.notifications), where('userId', '==', uid)));
+  const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return rows.sort((a,b)=>timestampMs(b.createdAt)-timestampMs(a.createdAt)).slice(0,20);
 };
 
 export const markNotificationRead = id => updateDoc(doc(db, COLLECTIONS.notifications, id), { read: true, readAt: serverTimestamp() });
@@ -144,6 +153,71 @@ export function progressSummary(progress, questions = []) {
   return { completed, total, average, percent, passed, attempts: relevant.length };
 }
 
+export const getDeadlines = () => list(COLLECTIONS.deadlines);
+export const getDeadlineOverrides = async userId => {
+  const base = collection(db, COLLECTIONS.deadlineOverrides);
+  // Students may only read their own adjustments, so filter in the query.
+  const snap = await getDocs(userId ? query(base, where('userId', '==', userId)) : base);
+  return snap.docs.map(row => ({ id: row.id, ...row.data() }));
+};
+const toIso = value => {
+  const ms = timestampMs(value);
+  return ms ? new Date(ms).toISOString() : '';
+};
+export const saveClassDeadline = ({ lessonId, moduleId = '', lessonTitle = '', dueAt, uid }) => setDoc(doc(db, COLLECTIONS.deadlines, lessonId), {
+  lessonId, moduleId, lessonTitle, dueAt: toIso(dueAt), updatedBy: uid, updatedAt: serverTimestamp(),
+}, { merge: true });
+export const clearClassDeadline = lessonId => deleteDoc(doc(db, COLLECTIONS.deadlines, lessonId));
+export const saveDeadlineOverride = ({ lessonId, studentId, studentName = '', lessonTitle = '', dueAt, reason = '', uid }) => setDoc(
+  doc(db, COLLECTIONS.deadlineOverrides, `${lessonId}_${studentId}`),
+  { lessonId, userId: studentId, studentName, lessonTitle, dueAt: toIso(dueAt), reason: clean(reason), updatedBy: uid, updatedAt: serverTimestamp() },
+  { merge: true },
+);
+export const deleteDeadlineOverride = id => deleteDoc(doc(db, COLLECTIONS.deadlineOverrides, id));
+export const deadlineFor = (deadlines, overrides, lessonId, userId) => {
+  const base = (deadlines || []).find(row => row.lessonId === lessonId || row.id === lessonId);
+  const personal = (overrides || []).find(row => row.lessonId === lessonId && row.userId === userId);
+  return { dueAt: personal?.dueAt || base?.dueAt || '', classDueAt: base?.dueAt || '', personal: !!personal?.dueAt };
+};
+export const dueState = value => {
+  const ms = timestampMs(value);
+  if (!ms) return { label: '', overdue: false, ms: 0 };
+  const label = `Due ${new Date(ms).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+  return { label, overdue: ms < Date.now(), ms };
+};
+
+export const DEFAULT_QUIZ_SETTINGS = { timeLimitMinutes: 0, attemptsAllowed: 0, passingScore: 75, shuffleQuestions: false, showAnswersAfter: true };
+export const getQuizzes = () => list(COLLECTIONS.quizzes);
+const settingNumber = (value, fallback) => (Number.isFinite(Number(value)) ? Number(value) : fallback);
+export const quizSettingsFor = (quizzes, lessonId) => {
+  const row = (quizzes || []).find(item => item.lessonId === lessonId || item.id === lessonId) || {};
+  return {
+    timeLimitMinutes: Math.max(0, settingNumber(row.timeLimitMinutes, 0)),
+    attemptsAllowed: Math.max(0, Math.floor(settingNumber(row.attemptsAllowed, 0))),
+    passingScore: Math.min(100, Math.max(1, settingNumber(row.passingScore, 75))),
+    shuffleQuestions: row.shuffleQuestions === true,
+    showAnswersAfter: row.showAnswersAfter !== false,
+  };
+};
+export const saveQuizSettings = ({ lessonId, title = '', ...patch }) => setDoc(doc(db, COLLECTIONS.quizzes, lessonId), {
+  lessonId,
+  title: clean(title),
+  timeLimitMinutes: Math.max(0, settingNumber(patch.timeLimitMinutes, 0)),
+  attemptsAllowed: Math.max(0, Math.floor(settingNumber(patch.attemptsAllowed, 0))),
+  passingScore: Math.min(100, Math.max(1, settingNumber(patch.passingScore, 75))),
+  shuffleQuestions: patch.shuffleQuestions === true,
+  showAnswersAfter: patch.showAnswersAfter !== false,
+  updatedAt: serverTimestamp(),
+}, { merge: true });
+export const shuffleList = rows => {
+  const copy = [...rows];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+};
+
 export const saveProfile = (uid, patch) => updateDoc(doc(db, COLLECTIONS.users, uid), { ...patch, updatedAt: serverTimestamp() });
 
 export const saveModule = async ({ id, uid, title, description, order, status, fileURL = '', fileName = '', filePath = '', fileId = '', fileType = '', fileSize = 0 }) => {
@@ -170,12 +244,24 @@ export const saveQuestion = async ({ id, uid, lessonId, question, choiceA, choic
 };
 export const deleteQuestion = id => deleteDoc(doc(db, COLLECTIONS.questions, id));
 
-export const saveQuizProgress = async ({ uid, lessonId, score, total }) => {
+export const saveQuizProgress = async ({ uid, lessonId, score, total, passingScore = 75, attemptsUsed = 0, timeSpentSeconds = 0 }) => {
   const percentage = total ? Math.round(score / total * 100) : 0;
-  const result = percentage >= 75 ? 'passing' : 'failing';
+  const result = percentage >= passingScore ? 'passing' : 'failing';
   const id = `${uid}_${lessonId}`;
-  await setDoc(doc(db, COLLECTIONS.progress, id), { userId: uid, lessonId, score, total, percentage, result, completed: true, completedAt: serverTimestamp() }, { merge: true });
-  return { score, total, percentage, result };
+  const ref = doc(db, COLLECTIONS.progress, id);
+  // Keep the best score across attempts so a weaker retake never erases it.
+  let previousBest = 0;
+  try {
+    const snap = await getDoc(ref);
+    if (snap.exists()) previousBest = Number(snap.data()?.bestPercentage || 0);
+  } catch { previousBest = 0; }
+  const bestPercentage = Math.max(previousBest, percentage);
+  await setDoc(ref, {
+    userId: uid, lessonId, score, total, percentage, result, passingScore, bestPercentage,
+    attempts: increment(1), lastTimeSpentSeconds: Number(timeSpentSeconds) || 0,
+    completed: true, completedAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  }, { merge: true });
+  return { score, total, percentage, result, passingScore, bestPercentage, attempts: attemptsUsed + 1 };
 };
 
 export const updateTeacher = (id, patch) => updateDoc(doc(db, COLLECTIONS.users, id), { ...patch, updatedAt: serverTimestamp() });

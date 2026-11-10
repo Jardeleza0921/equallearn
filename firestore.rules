@@ -1,0 +1,166 @@
+rules_version = '2';
+
+// EqualLearn Firestore security rules.
+//
+// Deploy with:  npx firebase-tools deploy --only firestore:rules
+// (or paste this file into Firebase Console -> Firestore Database -> Rules)
+//
+// Roles live in users/{uid}.role and are never set by the client for anything
+// other than a self-created student profile.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function hasProfile(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid));
+    }
+
+    function profileOf(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    function myUid() {
+      return request.auth.uid;
+    }
+
+    function myRole() {
+      return signedIn() && hasProfile(myUid()) ? profileOf(myUid()).get('role', '') : '';
+    }
+
+    function isAdmin() {
+      return myRole() == 'admin';
+    }
+
+    function isTeacher() {
+      return myRole() == 'teacher';
+    }
+
+    function isStaff() {
+      return isAdmin() || isTeacher();
+    }
+
+    // True when an update leaves the given field untouched.
+    function keeps(field) {
+      return request.resource.data.get(field, null) == resource.data.get(field, null);
+    }
+
+    // -----------------------------------------------------------------
+    // users: one document per Firebase Authentication account
+    // -----------------------------------------------------------------
+    match /users/{uid} {
+      allow get: if signedIn() && (myUid() == uid || isStaff());
+      allow list: if isStaff();
+
+      // A student creates their own profile right after signing up with an
+      // email and password or with Google. Administrators create teacher and
+      // student profiles.
+      allow create: if (signedIn()
+          && myUid() == uid
+          && request.resource.data.get('uid', '') == uid
+          && request.resource.data.get('role', '') == 'student'
+          && request.resource.data.get('status', '') == 'active')
+        || isAdmin();
+
+      // Students and teachers may edit their own name, academic, and profile
+      // fields (and lastLogin on sign-in) but never role, status, uid, email.
+      allow update: if isAdmin() || (signedIn()
+        && myUid() == uid
+        && keeps('role')
+        && keeps('status')
+        && keeps('uid')
+        && keeps('email'));
+      allow delete: if isAdmin();
+    }
+
+    // -----------------------------------------------------------------
+    // Learning content: every signed-in role reads, staff writes
+    // -----------------------------------------------------------------
+    match /modules/{moduleId} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+    }
+
+    match /lessons/{lessonId} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+    }
+
+    match /questions/{questionId} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+    }
+
+    // -----------------------------------------------------------------
+    // deadlines: one class-wide due date per lesson, plus an optional
+    // per-student override that the student can read for themselves.
+    // -----------------------------------------------------------------
+    match /deadlines/{lessonId} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+    }
+
+    match /deadlineOverrides/{overrideId} {
+      allow get: if signedIn() && (resource.data.get('userId', '') == myUid() || isStaff());
+      allow list: if isStaff() || (signedIn() && resource.data.get('userId', '') == myUid());
+      allow create, update, delete: if isStaff();
+    }
+
+    // -----------------------------------------------------------------
+    // quizzes: per-lesson assessment settings (time limit, attempts,
+    // passing score, shuffling, answer review)
+    // -----------------------------------------------------------------
+    match /quizzes/{quizId} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+    }
+
+    // -----------------------------------------------------------------
+    // progress: document id is <uid>_<lessonId>
+    // Students read and write only their own rows; staff read and clean up.
+    // -----------------------------------------------------------------
+    match /progress/{progressId} {
+      allow get: if signedIn() && (resource.data.get('userId', '') == myUid() || isStaff());
+      allow list: if isStaff() || (signedIn() && resource.data.get('userId', '') == myUid());
+      allow create, update: if isStaff() || (signedIn() && request.resource.data.get('userId', '') == myUid());
+      allow delete: if isStaff();
+    }
+
+    // -----------------------------------------------------------------
+    // classGroups: section metadata. Students add/refresh their own section
+    // while registering, so any signed-in account may write group metadata.
+    // -----------------------------------------------------------------
+    match /classGroups/{classGroupId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn();
+      allow delete: if isAdmin();
+    }
+
+    // -----------------------------------------------------------------
+    // teacherAssignments: designations are managed by administrators
+    // -----------------------------------------------------------------
+    match /teacherAssignments/{assignmentId} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // -----------------------------------------------------------------
+    // notifications: a student sees and marks only their own
+    // -----------------------------------------------------------------
+    match /notifications/{notificationId} {
+      allow get: if signedIn() && (resource.data.get('userId', '') == myUid() || isStaff());
+      allow list: if signedIn() && resource.data.get('userId', '') == myUid();
+      allow create: if isStaff();
+      allow update: if isStaff() || (signedIn() && resource.data.get('userId', '') == myUid());
+      allow delete: if isStaff() || (signedIn() && resource.data.get('userId', '') == myUid());
+    }
+
+    // Everything else stays closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

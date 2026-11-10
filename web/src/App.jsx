@@ -1,5 +1,5 @@
-import { Navigate, Route, Routes, Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { Navigate, Route, Routes, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import {
   ArrowRight, BarChart3, BookOpen, CheckCircle2, ChevronRight, ClipboardCheck, Download,
   FileText, GraduationCap, HeartHandshake, Plus, Search, ShieldCheck, Sparkles, Upload,
@@ -15,6 +15,8 @@ import { useDesign } from './context/DesignContext';
 import ProfileAvatar from './components/ProfileAvatar';
 import { CourseField, NameFields } from './components/NameFields';
 import * as Live from './pages/FunctionalPages';
+import { confirmPasswordReset, verifyPasswordResetCode } from 'firebase/auth';
+import { auth } from './lib/firebase';
 
 function PublicHeader(){return <header className="public-nav"><Link to="/"><Logo/></Link><nav><Link to="/features">Features</Link><Link to="/mobile">Mobile</Link><Link to="/about">About</Link><Link to="/developers">Developers</Link></nav><div className="public-actions"><ThemePicker compact/><Link className="btn ghost" to="/login">Login</Link></div></header>}
 function PublicFooter(){return <footer className="footer"><Logo/><span>EqualLearn · Pateros Technological College</span></footer>}
@@ -34,7 +36,9 @@ function AuthGate({role,children}){const {firebaseUser,profile,loading}=useAuth(
 
 function PasswordInput(props){const [show,setShow]=useState(false);return <div className="password-input"><input {...props} type={show?'text':'password'}/><button type="button" className="password-toggle" onClick={()=>setShow(v=>!v)} aria-label={show?'Hide password':'Show password'}>{show?<EyeOff size={16}/>:<Eye size={16}/>}<span>{show?'Hide':'Show'}</span></button></div>}
 
-function resetErrorMessage(error){const code=error?.code||'';if(code==='auth/invalid-email')return 'That email address is not formatted correctly.';if(code==='auth/user-not-found')return 'No EqualLearn account uses that email address.';if(code==='auth/too-many-requests')return 'Too many reset attempts. Wait a few minutes, then try again.';if(code==='auth/network-request-failed')return 'Network problem. Check your connection and try again.';return error?.message||'Unable to send the reset email.'}
+function resetErrorMessage(error){const code=error?.code||'';if(code==='auth/invalid-email')return 'That email address is not formatted correctly.';if(code==='auth/user-not-found')return 'No EqualLearn account uses that email address.';if(code==='auth/too-many-requests')return 'Too many reset attempts. Wait a few minutes, then try again.';if(code==='auth/network-request-failed')return 'Network problem. Check your connection and try again.';if(code==='auth/expired-action-code')return 'That reset link has expired. Request a new one.';if(code==='auth/invalid-action-code')return 'That reset link is no longer valid. Request a new one.';if(code==='auth/weak-password')return 'Choose a password with at least 6 characters.';if(code==='auth/unauthorized-continue-uri')return 'This domain is not allowed to send password reset links yet.';return error?.message||'Unable to send the reset email.'}
+
+function GoogleButton({onClick,disabled,children}){return <button type="button" className="btn ghost full google-btn" onClick={onClick} disabled={disabled}><span className="google-mark" aria-hidden="true">G</span><span>{children}</span></button>}
 
 function ForgotPassword({initialEmail,onBack,resetPassword}){
   const [email,setEmail]=useState(initialEmail||''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[sentTo,setSentTo]=useState('');
@@ -68,44 +72,75 @@ function ForgotPassword({initialEmail,onBack,resetPassword}){
   </form>;
 }
 
+function ResetPasswordPage(){
+  const code=new URLSearchParams(useLocation().search).get('oobCode')||'';
+  const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[confirm,setConfirm]=useState(''),[status,setStatus]=useState(code?'checking':'missing'),[error,setError]=useState('');
+  useEffect(()=>{if(!code){setStatus('missing');return}let live=true;verifyPasswordResetCode(auth,code).then(mail=>{if(!live)return;setEmail(mail);setStatus('ready')}).catch(err=>{if(!live)return;setError(resetErrorMessage(err));setStatus('invalid')});return()=>{live=false}},[code]);
+  async function submit(e){e.preventDefault();setError('');if(password.length<6){setError('Choose a password with at least 6 characters.');return}if(password!==confirm){setError('Both passwords must match.');return}setStatus('saving');try{await confirmPasswordReset(auth,code,password);setStatus('done')}catch(err){setError(resetErrorMessage(err));setStatus('ready')}}
+  const back=<Link className="back-link" to="/login">← Back to sign in</Link>;
+  if(status==='missing'||status==='invalid')return <div className="auth-page"><div className="auth-card"><span className="eyebrow">Account recovery</span><h2>Reset link not usable</h2><p className="muted">{error||'Open the most recent password reset link from your email, or request a new one.'}</p><Link className="btn primary full" to="/login">Request a new link</Link>{back}</div></div>;
+  if(status==='done')return <div className="auth-page"><div className="auth-card"><span className="eyebrow">Account recovery</span><h2>Password updated.</h2><p className="muted">You can now sign in to EqualLearn with your new password.</p><Link className="btn primary full" to="/login">Go to sign in</Link></div></div>;
+  return <div className="auth-page">
+    <div className="auth-brand"><Logo/><span className="eyebrow">Account recovery</span><h1>Choose a new password.</h1><p>{email?`This reset link is for ${email}.`:'Checking your reset link…'}</p></div>
+    <form className="auth-card" onSubmit={submit}><h2>Reset password</h2>
+      <p className="muted">Set a new password for your EqualLearn account.</p>
+      {email&&<label>Email<input value={email} readOnly/></label>}
+      <label>New password<PasswordInput minLength="6" value={password} onChange={e=>{setPassword(e.target.value);if(error)setError('')}} autoComplete="new-password" placeholder="At least 6 characters" required/></label>
+      <label>Confirm new password<PasswordInput minLength="6" value={confirm} onChange={e=>{setConfirm(e.target.value);if(error)setError('')}} autoComplete="new-password" placeholder="Repeat new password" required/></label>
+      {error&&<p className="form-message error">{error}</p>}
+      <button className="btn primary full" disabled={status==='checking'||status==='saving'}>{status==='checking'?'Checking link…':status==='saving'?'Saving…':'Set new password'}</button>
+      {back}
+    </form>
+  </div>
+}
+
 function Login(){
-  const {login,resetPassword,firebaseUser,profile}=useAuth();
+  const {login,resetPassword,signInWithGoogle,firebaseUser,profile}=useAuth();
   const navigate=useNavigate();
-  const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[forgot,setForgot]=useState(false);
+  const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[busy,setBusy]=useState(false),[googleBusy,setGoogleBusy]=useState(false),[message,setMessage]=useState(''),[forgot,setForgot]=useState(false);
+  const resetDone=new URLSearchParams(useLocation().search).get('reset')==='done';
   if(firebaseUser&&profile)return <Navigate to={roleHome((profile.role||'student').toLowerCase())} replace/>;
   async function submit(e){e.preventDefault();setBusy(true);setMessage('');try{const p=await login(email,password);navigate(roleHome((p.role||'student').toLowerCase()),{replace:true})}catch(err){setMessage(err.message||'Unable to sign in.')}finally{setBusy(false)}}
+  async function google(){setGoogleBusy(true);setMessage('');try{const result=await signInWithGoogle();if(result.status==='signed-in')navigate(roleHome((result.profile.role||'student').toLowerCase()),{replace:true});else if(result.status==='needs-profile')setMessage('That Google account has no EqualLearn profile yet. Use “Create student account” to finish setting it up.')}catch(err){setMessage(err.message||'Google sign-in failed.')}finally{setGoogleBusy(false)}}
   return <div className="auth-page">
-    <div className="auth-brand"><Logo/><span className="eyebrow">EqualLearn</span><h1>Welcome back.</h1><p>Sign in with the same Firebase account you already use in EqualLearn.</p><div className="auth-art"><GraduationCap/><div><strong>Learn. Understand. Create equality.</strong><span>Same accounts. New frontend.</span></div></div></div>
+    <div className="auth-brand"><Logo/><span className="eyebrow">EqualLearn</span><h1>Welcome back.</h1><p>Sign in with the same Firebase account you already use in EqualLearn — with your password or your Google account.</p><div className="auth-art"><GraduationCap/><div><strong>Learn. Understand. Create equality.</strong><span>Same accounts. New frontend.</span></div></div></div>
     {forgot
       ? <ForgotPassword initialEmail={email} resetPassword={resetPassword} onBack={()=>setForgot(false)}/>
-      : <form className="auth-card" onSubmit={submit}><h2>Sign in</h2><p className="muted">Connected to the existing Firebase Authentication + users collection.</p><label>Email<input value={email} onChange={e=>setEmail(e.target.value)} type="email" autoComplete="email" placeholder="you@example.com" required/></label><label>Password<PasswordInput value={password} onChange={e=>setPassword(e.target.value)} autoComplete="current-password" placeholder="••••••••" required/></label><div className="auth-inline"><button type="button" className="link-button" onClick={()=>{setMessage('');setForgot(true)}}>Forgot password?</button></div>{message&&<p className="form-message error">{message}</p>}<button className="btn primary full" disabled={busy}>{busy?'Signing in…':'Continue'}</button><div className="demo-divider"><span>New student?</span></div><Link className="btn ghost full" to="/register">Create student account</Link><Link className="back-link" to="/">← Back to EqualLearn</Link></form>}
-  </div>;
+      : <form className="auth-card" onSubmit={submit}><h2>Sign in</h2><p className="muted">Connected to the existing Firebase Authentication + users collection.</p>{resetDone&&<p className="form-message success">Your password was changed. Sign in with your new password.</p>}<GoogleButton onClick={google} disabled={googleBusy||busy}>{googleBusy?'Connecting to Google…':'Continue with Google'}</GoogleButton><div className="demo-divider"><span>or use your email</span></div><label>Email<input value={email} onChange={e=>setEmail(e.target.value)} type="email" autoComplete="email" placeholder="you@example.com" required/></label><label>Password<PasswordInput value={password} onChange={e=>setPassword(e.target.value)} autoComplete="current-password" placeholder="••••••••" required/></label><div className="auth-inline"><button type="button" className="link-button" onClick={()=>{setMessage('');setForgot(true)}}>Forgot password?</button></div>{message&&<p className="form-message error">{message}</p>}<button className="btn primary full" disabled={busy||googleBusy}>{busy?'Signing in…':'Continue'}</button><div className="demo-divider"><span>New student?</span></div><Link className="btn ghost full" to="/register">Create student account</Link><Link className="back-link" to="/">← Back to EqualLearn</Link></form>}
+  </div>
 }
 
 function Register(){
-  const {registerStudent}=useAuth();
+  const {registerStudent,signInWithGoogle,completeGoogleRegistration,cancelGoogleSetup}=useAuth();
   const navigate=useNavigate();
   const [form,setForm]=useState({firstName:'',middleInitial:'',lastName:'',studentNumber:'',email:'',course:'BSIT',yearLevel:'',section:'',password:''});
-  const [busy,setBusy]=useState(false),[message,setMessage]=useState('');
+  const [busy,setBusy]=useState(false),[googleBusy,setGoogleBusy]=useState(false),[googleAccount,setGoogleAccount]=useState(null),[message,setMessage]=useState('');
   const set=(k,v)=>setForm(x=>({...x,[k]:v}));
   const setName=v=>setForm(x=>({...x,...v}));
   const setSection=v=>set('section',v.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,3));
-  async function submit(e){e.preventDefault();setBusy(true);setMessage('');try{await registerStudent(form);navigate('/student',{replace:true})}catch(err){setMessage(err.message||'Unable to create account.')}finally{setBusy(false)}}
+  async function google(){setGoogleBusy(true);setMessage('');try{const result=await signInWithGoogle({allowProfileSetup:true});if(result.status==='cancelled')return;if(result.status==='signed-in'){navigate(roleHome((result.profile.role||'student').toLowerCase()),{replace:true});return}const account=result.account;setGoogleAccount(account);setForm(x=>({...x,firstName:account.firstName||x.firstName,middleInitial:account.middleInitial||x.middleInitial,lastName:account.lastName||x.lastName,email:account.email||x.email}))}catch(err){setMessage(err.message||'Google sign-in failed.')}finally{setGoogleBusy(false)}}
+  async function leaveGoogle(){setGoogleBusy(true);try{await cancelGoogleSetup()}catch(err){setMessage(err.message||'Could not cancel Google sign-up.')}finally{setGoogleAccount(null);setForm(x=>({...x,email:'',password:''}));setGoogleBusy(false)}}
+  async function submit(e){e.preventDefault();setBusy(true);setMessage('');try{if(googleAccount){await completeGoogleRegistration(form)}else{await registerStudent(form)}navigate('/student',{replace:true})}catch(err){setMessage(err.message||'Unable to create account.')}finally{setBusy(false)}}
   return <div className="auth-page">
-    <div className="auth-brand"><Logo/><span className="eyebrow">Student registration</span><h1>Join EqualLearn.</h1><p>Create your student account with your name, course, year level, and section.</p></div>
+    <div className="auth-brand"><Logo/><span className="eyebrow">Student registration</span><h1>Join EqualLearn.</h1><p>Create your student account with your name, course, year level, and section — using a Google account or an email and password.</p></div>
     <form className="auth-card" onSubmit={submit}><h2>Create student account</h2>
+      {googleAccount
+        ? <div className="google-account"><span className="google-mark" aria-hidden="true">G</span><div><strong>Google account connected</strong><small>{googleAccount.email}</small></div><button type="button" className="link-button" onClick={leaveGoogle} disabled={googleBusy}>Cancel</button></div>
+        : <><GoogleButton onClick={google} disabled={googleBusy||busy}>{googleBusy?'Connecting to Google…':'Sign up with Google'}</GoogleButton><div className="demo-divider"><span>or register with email</span></div></>}
       <NameFields value={form} onChange={setName} required idPrefix="register"/>
       <label>Student ID<input value={form.studentNumber} onChange={e=>set('studentNumber',e.target.value)} placeholder="23BSIT-0601" required/></label>
-      <label>Email<input type="email" value={form.email} onChange={e=>set('email',e.target.value)} required/></label>
+      <label>Email<input type="email" value={form.email} onChange={e=>set('email',e.target.value)} readOnly={!!googleAccount} required/></label>
       <CourseField value={form.course} onChange={v=>set('course',v)} required hint="Type your program code or choose a suggestion."/>
       <label>Year level<select value={form.yearLevel} onChange={e=>set('yearLevel',e.target.value)} required><option value="">Select year</option><option value="1st">1st</option><option value="2nd">2nd</option><option value="3rd">3rd</option><option value="4th">4th</option></select></label>
       <label>Section<input value={form.section} onChange={e=>setSection(e.target.value)} maxLength="3" placeholder="A, 3A, 3A1" pattern="[A-Za-z0-9]{1,3}" title="Use 1 to 3 letters or numbers" required/></label>
-      <label>Password<PasswordInput minLength="6" value={form.password} onChange={e=>set('password',e.target.value)} autoComplete="new-password" required/></label>
+      {googleAccount
+        ? <p className="muted small">This account signs in with Google. No password is needed.</p>
+        : <label>Password<PasswordInput minLength="6" value={form.password} onChange={e=>set('password',e.target.value)} autoComplete="new-password" required/></label>}
       {message&&<p className="form-message error">{message}</p>}
-      <button className="btn primary full" disabled={busy}>{busy?'Creating…':'Create account'}</button>
+      <button className="btn primary full" disabled={busy||googleBusy}>{busy?(googleAccount?'Saving profile…':'Creating…'):(googleAccount?'Finish creating account':'Create account')}</button>
       <Link className="back-link" to="/login">← Back to sign in</Link>
     </form>
-  </div>;
+  </div>
 }
 
 function Stat({icon:Icon,label,value='—',note}){return <article className="stat-card"><span><Icon size={18}/></span><div><small>{label}</small><strong>{value}</strong><p>{note}</p></div></article>}
@@ -219,8 +254,8 @@ function AdminDesign(){
 }
 
 export default function App(){const protect=(role,node)=><AuthGate role={role}>{node}</AuthGate>;return <Routes>
-<Route path="/" element={<Landing/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/mobile" element={<MobilePage/>}/><Route path="/about" element={<AboutPage/>}/><Route path="/developers" element={<DevelopersPage/>}/><Route path="/login" element={<Login/>}/><Route path="/register" element={<Register/>}/>
+<Route path="/" element={<Landing/>}/><Route path="/features" element={<FeaturesPage/>}/><Route path="/mobile" element={<MobilePage/>}/><Route path="/about" element={<AboutPage/>}/><Route path="/developers" element={<DevelopersPage/>}/><Route path="/login" element={<Login/>}/><Route path="/register" element={<Register/>}/><Route path="/reset-password" element={<ResetPasswordPage/>}/>
 <Route path="/student" element={protect('student',<Live.StudentDashboard/>)}/><Route path="/student/learning" element={protect('student',<Live.StudentLearning/>)}/><Route path="/student/learning/:moduleId" element={protect('student',<Live.StudentModuleDetails/>)}/><Route path="/student/quizzes" element={protect('student',<Live.StudentQuizzes/>)}/><Route path="/student/quiz/:lessonId" element={protect('student',<Live.StudentQuiz/>)}/><Route path="/student/progress" element={protect('student',<Live.StudentProgress/>)}/><Route path="/student/profile" element={protect('student',<Live.StudentProfile/>)}/><Route path="/student/settings" element={protect('student',<Live.LiveSettings role="student"/>)}/>
-<Route path="/teacher" element={protect('teacher',<Live.TeacherDashboard/>)}/><Route path="/teacher/learning-content" element={protect('teacher',<Live.TeacherLearning/>)}/><Route path="/teacher/students" element={protect('teacher',<Live.TeacherStudents/>)}/><Route path="/teacher/quizzes" element={protect('teacher',<Live.TeacherQuizBuilder/>)}/><Route path="/teacher/analytics" element={protect('teacher',<Live.TeacherAnalytics/>)}/><Route path="/teacher/profile" element={protect('teacher',<Live.TeacherProfile/>)}/><Route path="/teacher/settings" element={protect('teacher',<Live.LiveSettings role="teacher"/>)}/>
+<Route path="/teacher" element={protect('teacher',<Live.TeacherDashboard/>)}/><Route path="/teacher/learning-content" element={protect('teacher',<Live.TeacherLearning/>)}/><Route path="/teacher/students" element={protect('teacher',<Live.TeacherStudents/>)}/><Route path="/teacher/quizzes" element={protect('teacher',<Live.TeacherQuizBuilder/>)}/><Route path="/teacher/analytics" element={protect('teacher',<Live.TeacherAnalytics/>)}/><Route path="/teacher/profile" element={protect('teacher',<Live.TeacherProfile/>)}/><Route path="/teacher/settings" element={protect('teacher',<Live.LiveSettings role="teacher"/>)}/><Route path="/teacher/deadlines" element={protect('teacher',<Live.TeacherDeadlines/>)}/>
 <Route path="/admin" element={protect('admin',<Live.AdminDashboard/>)}/><Route path="/admin/users" element={protect('admin',<Live.AdminUsers/>)}/><Route path="/admin/teachers" element={protect('admin',<Live.AdminTeachers/>)}/><Route path="/admin/classes" element={protect('admin',<Live.AdminClasses/>)}/><Route path="/admin/reports" element={protect('admin',<Live.AdminReports/>)}/><Route path="/admin/design" element={protect('admin',<AdminDesign/>)}/><Route path="/admin/settings" element={protect('admin',<Live.LiveSettings role="admin"/>)}/>
 <Route path="*" element={<Navigate to="/" replace/>}/></Routes>}
